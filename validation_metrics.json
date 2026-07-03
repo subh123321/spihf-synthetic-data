@@ -1,0 +1,1091 @@
+{
+  "summary": {
+    "timestamp": "2026-07-03T12:48:15.619630",
+    "real_samples": 304,
+    "synth_samples": 1001,
+    "ks_pass_rate": 0.4444,
+    "mean_wasserstein_normalised": 0.0188,
+    "mean_jsd": 0.039853,
+    "mahalanobis_distance": 321.6499,
+    "correlation_frobenius_norm": 1.9486,
+    "physics_sign_preservation_rate": 0.8571,
+    "mean_pct_diff_stats": 6.37,
+    "composite_score": 60.61,
+    "grade": "C",
+    "sub_scores": {
+      "ks_pass_rate_25pct": 44.44,
+      "wasserstein_score_25pct": 98.12,
+      "correlation_score_20pct": 54.07,
+      "importance_score_15pct": 0.74,
+      "stats_fidelity_15pct": 93.63
+    }
+  },
+  "distribution_statistics": {
+    "Thickness (mm)": {
+      "real_mean": 1.1451973684210526,
+      "synth_mean": 1.1430589525369048,
+      "pct_diff_mean": 0.18672902532915464,
+      "real_std": 0.33614386829313386,
+      "synth_std": 0.30760001489358774,
+      "pct_diff_std": 8.49155855333184,
+      "real_median": 1.0,
+      "synth_median": 1.0008826502591226,
+      "pct_diff_median": 0.08826502591225971,
+      "real_iqr": 0.5,
+      "synth_iqr": 0.49521337958392075,
+      "pct_diff_iqr": 0.9573240832158492,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "Precut dimensions (diameter/side length) mm": {
+      "real_mean": 50.56546052631579,
+      "synth_mean": 50.843303018743164,
+      "pct_diff_mean": 0.5494709027376057,
+      "real_std": 31.705682135150514,
+      "synth_std": 29.855621108664998,
+      "pct_diff_std": 5.835108730981837,
+      "real_median": 45.0,
+      "synth_median": 44.0,
+      "pct_diff_median": 2.2222222222222223,
+      "real_iqr": 26.5,
+      "synth_iqr": 30.185796316262255,
+      "pct_diff_iqr": 13.90866534438587,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "Total Strain/Elongation (%)": {
+      "real_mean": 21.104342105263157,
+      "synth_mean": 21.08321582665269,
+      "pct_diff_mean": 0.10010394308950417,
+      "real_std": 10.654108036226882,
+      "synth_std": 10.000024758918023,
+      "pct_diff_std": 6.1392589138837,
+      "real_median": 17.0,
+      "synth_median": 17.10543344690567,
+      "pct_diff_median": 0.6201967465039485,
+      "real_iqr": 13.64,
+      "synth_iqr": 11.629643406013683,
+      "pct_diff_iqr": 14.738684706644559,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "UTS (MPa)": {
+      "real_mean": 248.32519736842104,
+      "synth_mean": 251.8235982517044,
+      "pct_diff_mean": 1.4087981889703458,
+      "real_std": 109.87117737806747,
+      "synth_std": 107.45176696502236,
+      "pct_diff_std": 2.2020428567174686,
+      "real_median": 228.0,
+      "synth_median": 243.6481231427801,
+      "pct_diff_median": 6.863211904728112,
+      "real_iqr": 173.6,
+      "synth_iqr": 149.82716446451073,
+      "pct_diff_iqr": 13.694029686341743,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "YS (MPa)": {
+      "real_mean": 165.65549342105265,
+      "synth_mean": 164.61491691951406,
+      "pct_diff_mean": 0.6281569539584925,
+      "real_std": 90.60979536958158,
+      "synth_std": 80.88076225272086,
+      "pct_diff_std": 10.737286269301997,
+      "real_median": 165.0,
+      "synth_median": 165.0,
+      "pct_diff_median": 0.0,
+      "real_iqr": 96.5,
+      "synth_iqr": 96.94883191582112,
+      "pct_diff_iqr": 0.46511079359701235,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "Strength Coefficient (k in MPa)": {
+      "real_mean": 381.2536842105263,
+      "synth_mean": 389.3947400187856,
+      "pct_diff_mean": 2.1353382656792648,
+      "real_std": 206.36698579421017,
+      "synth_std": 197.42744341723662,
+      "pct_diff_std": 4.331866525340487,
+      "real_median": 400.0,
+      "synth_median": 399.4335014000928,
+      "pct_diff_median": 0.14162464997680502,
+      "real_iqr": 338.2,
+      "synth_iqr": 250.878984519048,
+      "pct_diff_iqr": 25.8193422474725,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "Strain hardening coefficient (n)": {
+      "real_mean": 0.19727631578947366,
+      "synth_mean": 0.19430174285338914,
+      "pct_diff_mean": 1.5078206038979782,
+      "real_std": 0.1922009252704852,
+      "synth_std": 0.12681413524230248,
+      "pct_diff_std": 34.0200183407877,
+      "real_median": 0.17,
+      "synth_median": 0.1716014945153683,
+      "pct_diff_median": 0.9420555972754615,
+      "real_iqr": 0.09,
+      "synth_iqr": 0.0984200018481396,
+      "pct_diff_iqr": 9.355557609043997,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "Anisotropic (R Value)": {
+      "real_mean": 0.9069591836734693,
+      "synth_mean": 0.9057711766429911,
+      "pct_diff_mean": 0.13098792667453513,
+      "real_std": 0.4931919698732474,
+      "synth_std": 0.494188879560032,
+      "pct_diff_std": 0.20213420892492923,
+      "real_median": 0.77,
+      "synth_median": 0.7704010072171648,
+      "pct_diff_median": 0.052078859372044074,
+      "real_iqr": 0.19999999999999996,
+      "synth_iqr": 0.20068916161039252,
+      "pct_diff_iqr": 0.34458080519628187,
+      "real_n": 294,
+      "synth_n": 1000
+    },
+    "Is lubricant used?": {
+      "real_mean": 0.7861842105263158,
+      "synth_mean": 0.7792207792207793,
+      "pct_diff_mean": 0.8857251535075793,
+      "real_std": 0.4106742973400506,
+      "synth_std": 0.4149792672023413,
+      "pct_diff_std": 1.0482686377438497,
+      "real_median": 1.0,
+      "synth_median": 1.0,
+      "pct_diff_median": 0.0,
+      "real_iqr": 0.0,
+      "synth_iqr": 0.0,
+      "pct_diff_iqr": 0.0,
+      "real_n": 304,
+      "synth_n": 1001
+    },
+    "Feed rate (mm/min)": {
+      "real_mean": 1231.3768,
+      "synth_mean": 1185.2061226433248,
+      "pct_diff_mean": 3.7495165863670037,
+      "real_std": 1257.3039127186037,
+      "synth_std": 992.8113331342034,
+      "pct_diff_std": 21.03648743226302,
+      "real_median": 1000.0,
+      "synth_median": 1000.0,
+      "pct_diff_median": 0.0,
+      "real_iqr": 200.0,
+      "synth_iqr": 346.67325554383274,
+      "pct_diff_iqr": 73.33662777191637,
+      "real_n": 250,
+      "synth_n": 910
+    },
+    "Tool speed (rpm)": {
+      "real_mean": 494.54128440366975,
+      "synth_mean": 450.8824881442598,
+      "pct_diff_mean": 8.828139861377764,
+      "real_std": 983.4841528631282,
+      "synth_std": 776.115277712885,
+      "pct_diff_std": 21.08512623681317,
+      "real_median": 170.0,
+      "synth_median": 248.68117448783227,
+      "pct_diff_median": 46.28304381637192,
+      "real_iqr": 600.0,
+      "synth_iqr": 596.5436564272861,
+      "pct_diff_iqr": 0.5760572621189795,
+      "real_n": 218,
+      "synth_n": 828
+    },
+    "Step depth (mm)": {
+      "real_mean": 0.40543396226415096,
+      "synth_mean": 0.4054476774890533,
+      "pct_diff_mean": 0.0033828505204032203,
+      "real_std": 0.3303853070506054,
+      "synth_std": 0.30683409575539744,
+      "pct_diff_std": 7.128407587326705,
+      "real_median": 0.25,
+      "synth_median": 0.34985144304060245,
+      "pct_diff_median": 39.94057721624098,
+      "real_iqr": 0.3,
+      "synth_iqr": 0.3003468658714259,
+      "pct_diff_iqr": 0.11562195714196848,
+      "real_n": 265,
+      "synth_n": 966
+    },
+    "No of stages": {
+      "real_mean": 2.166101694915254,
+      "synth_mean": 2.2170854271356784,
+      "pct_diff_mean": 2.3537090774687273,
+      "real_std": 1.9508074527010923,
+      "synth_std": 1.8157342572902226,
+      "pct_diff_std": 6.923963470810358,
+      "real_median": 1.0,
+      "synth_median": 1.0,
+      "pct_diff_median": 0.0,
+      "real_iqr": 3.0,
+      "synth_iqr": 2.0,
+      "pct_diff_iqr": 33.33333333333333,
+      "real_n": 295,
+      "synth_n": 995
+    },
+    "HER": {
+      "real_mean": 1.726456595744681,
+      "synth_mean": 1.735241640143247,
+      "pct_diff_mean": 0.5088482629809122,
+      "real_std": 0.8505965844359907,
+      "synth_std": 0.7815864299045984,
+      "pct_diff_std": 8.113147383157113,
+      "real_median": 1.5,
+      "synth_median": 1.5297983696786752,
+      "pct_diff_median": 1.9865579785783478,
+      "real_iqr": 0.3699999999999999,
+      "synth_iqr": 0.40208473733971806,
+      "pct_diff_iqr": 8.671550632356267,
+      "real_n": 235,
+      "synth_n": 911
+    },
+    "Flange Height (mm)": {
+      "real_mean": 17.363653179190752,
+      "synth_mean": 17.543838454225096,
+      "pct_diff_mean": 1.0377152386934583,
+      "real_std": 9.668637551980844,
+      "synth_std": 8.744707158017059,
+      "pct_diff_std": 9.555952314858427,
+      "real_median": 15.2,
+      "synth_median": 15.013926837533427,
+      "pct_diff_median": 1.2241655425432378,
+      "real_iqr": 13.600000000000001,
+      "synth_iqr": 13.096134451773553,
+      "pct_diff_iqr": 3.7048937369591797,
+      "real_n": 173,
+      "synth_n": 733
+    },
+    "Roughness (um)": {
+      "real_mean": 12.327352941176471,
+      "synth_mean": 11.991935333944065,
+      "pct_diff_mean": 2.720921586596476,
+      "real_std": 32.254391486156266,
+      "synth_std": 30.24760673822201,
+      "pct_diff_std": 6.221741150489774,
+      "real_median": 0.65,
+      "synth_median": 0.3409520518022632,
+      "pct_diff_median": 47.545838184267204,
+      "real_iqr": 0.9724999999999999,
+      "synth_iqr": 0.8243933915225713,
+      "pct_diff_iqr": 15.229471308733022,
+      "real_n": 68,
+      "synth_n": 341
+    },
+    "Minimum thickness (after final stage, mm)": {
+      "real_mean": 0.6988680981595092,
+      "synth_mean": 0.827709568077873,
+      "pct_diff_mean": 18.435734905867324,
+      "real_std": 0.3188674396010334,
+      "synth_std": 0.25119322598181676,
+      "pct_diff_std": 21.22330636953417,
+      "real_median": 0.608,
+      "synth_median": 0.7442366385405027,
+      "pct_diff_median": 22.407341865214264,
+      "real_iqr": 0.4615,
+      "synth_iqr": 0.39333602013276325,
+      "pct_diff_iqr": 14.770093145663438,
+      "real_n": 163,
+      "synth_n": 710
+    },
+    "Final angle after the final stage (degrees)": {
+      "real_mean": 84.67460084033614,
+      "synth_mean": 84.80001110144869,
+      "pct_diff_mean": 0.14810847629388255,
+      "real_std": 12.999301212488119,
+      "synth_std": 11.74580500506318,
+      "pct_diff_std": 9.642796846808457,
+      "real_median": 90.0,
+      "synth_median": 89.96487957568846,
+      "pct_diff_median": 0.03902269367949253,
+      "real_iqr": 4.900000000000006,
+      "synth_iqr": 5.0199132984524795,
+      "pct_diff_iqr": 2.447210172499462,
+      "real_n": 238,
+      "synth_n": 900
+    },
+    "Material (frequencies)": {
+      "1060 aluminum sheet": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "2205 Dual Phase Steel": {
+        "real_proportion": 0.0,
+        "synth_proportion": 0.013,
+        "abs_diff": 0.013
+      },
+      "2205 DualPhase Steel": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "304 stainless steel": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "7075-O aluminium alloy": {
+        "real_proportion": 0.0526,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0526
+      },
+      "7075-O aluminum alloy": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "AA1050": {
+        "real_proportion": 0.0197,
+        "synth_proportion": 0.0789,
+        "abs_diff": 0.0592
+      },
+      "AA1050 Aluminium": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "AA1050-H111": {
+        "real_proportion": 0.0197,
+        "synth_proportion": 0.0819,
+        "abs_diff": 0.0622
+      },
+      "AA1050-H111 Aluminium": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "AA1060": {
+        "real_proportion": 0.0296,
+        "synth_proportion": 0.0859,
+        "abs_diff": 0.0563
+      },
+      "AA1060 aluminium alloy": {
+        "real_proportion": 0.0362,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0362
+      },
+      "AA5052": {
+        "real_proportion": 0.0395,
+        "synth_proportion": 0.0689,
+        "abs_diff": 0.0295
+      },
+      "AA5052 aluminium alloy": {
+        "real_proportion": 0.0132,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0132
+      },
+      "AA5052 sheet": {
+        "real_proportion": 0.0132,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0132
+      },
+      "AA5052-H32": {
+        "real_proportion": 0.0395,
+        "synth_proportion": 0.0789,
+        "abs_diff": 0.0394
+      },
+      "AA5052-H32 Aluminium": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "AA5052-H32 aluminium": {
+        "real_proportion": 0.0329,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0329
+      },
+      "AA6061- T6 aluminium": {
+        "real_proportion": 0.0329,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0329
+      },
+      "AA6061-T6": {
+        "real_proportion": 0.0428,
+        "synth_proportion": 0.0949,
+        "abs_diff": 0.0521
+      },
+      "AA6061-T6 (CHF)": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "AA6061-T6 (IHF)": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "AA6061-T6 aluminum alloy": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "AA6061-T7": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.007,
+        "abs_diff": 0.0004
+      },
+      "AA6061-T8": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.007,
+        "abs_diff": 0.0004
+      },
+      "AA7075-0": {
+        "real_proportion": 0.0329,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0329
+      },
+      "AA7075-0 Aluminium alloy": {
+        "real_proportion": 0.0132,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0132
+      },
+      "AA7075-1": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.007,
+        "abs_diff": 0.0004
+      },
+      "AA7075-2": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.005,
+        "abs_diff": 0.0017
+      },
+      "AA7075-O": {
+        "real_proportion": 0.0362,
+        "synth_proportion": 0.1778,
+        "abs_diff": 0.1416
+      },
+      "AA7075-O (SPIF Single-Stage)": {
+        "real_proportion": 0.0197,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0197
+      },
+      "AA7075-O Aluminium alloy": {
+        "real_proportion": 0.0099,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0099
+      },
+      "AA7075-O aluminium": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "AISI 304": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "Al 1050": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "Al 1050A": {
+        "real_proportion": 0.0132,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0132
+      },
+      "Al 1051": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.001,
+        "abs_diff": 0.0023
+      },
+      "Al 6061": {
+        "real_proportion": 0.0099,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0099
+      },
+      "Al1060": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "Aluminium 1000 series": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "Aluminium 1050": {
+        "real_proportion": 0.0395,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0395
+      },
+      "Aluminium 5052 sheets": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "Aluminium AA1050-H111": {
+        "real_proportion": 0.0526,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0526
+      },
+      "Aluminum (unspecified)": {
+        "real_proportion": 0.0296,
+        "synth_proportion": 0.036,
+        "abs_diff": 0.0064
+      },
+      "Aluminum Alloy": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "Copper": {
+        "real_proportion": 0.0132,
+        "synth_proportion": 0.013,
+        "abs_diff": 0.0002
+      },
+      "DC01": {
+        "real_proportion": 0.0329,
+        "synth_proportion": 0.039,
+        "abs_diff": 0.0061
+      },
+      "DC01 Steel": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "DC04": {
+        "real_proportion": 0.0197,
+        "synth_proportion": 0.02,
+        "abs_diff": 0.0002
+      },
+      "DC05": {
+        "real_proportion": 0.0,
+        "synth_proportion": 0.013,
+        "abs_diff": 0.013
+      },
+      "DC05 steel": {
+        "real_proportion": 0.0132,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0132
+      },
+      "DD Steel": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "DD Steel (Failure Case)": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "DDQ Steel": {
+        "real_proportion": 0.0132,
+        "synth_proportion": 0.0589,
+        "abs_diff": 0.0458
+      },
+      "DDQ steel": {
+        "real_proportion": 0.0395,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0395
+      },
+      "Dual-Phase Steel": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "EN AW-6181-T1": {
+        "real_proportion": 0.0526,
+        "synth_proportion": 0.0589,
+        "abs_diff": 0.0063
+      },
+      "EN AW-6181-T1 Aluminium alloy": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "SUS 304": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.016,
+        "abs_diff": 0.0094
+      },
+      "Sheet Steel": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.013,
+        "abs_diff": 0.0064
+      },
+      "Ti-6Al-4V": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.005,
+        "abs_diff": 0.0017
+      },
+      "Titanium (grade 2)": {
+        "real_proportion": 0.0197,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0197
+      },
+      "Titanium Grade 2": {
+        "real_proportion": 0.0,
+        "synth_proportion": 0.02,
+        "abs_diff": 0.02
+      },
+      "aluminium 5052-H32 sheet": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "aluminum AA1050-H111": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "aluminum alloy (AA1060)": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "dual phase steel": {
+        "real_proportion": 0.0033,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0033
+      },
+      "steel sheet": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      }
+    },
+    "Precut Shape (circle/square/etc) (frequencies)": {
+      "Circle": {
+        "real_proportion": 0.7895,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.7895
+      },
+      "Circle        ": {
+        "real_proportion": 0.0263,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0263
+      },
+      "Circular": {
+        "real_proportion": 0.0099,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0099
+      },
+      "Square": {
+        "real_proportion": 0.0493,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0493
+      },
+      "Square ": {
+        "real_proportion": 0.0066,
+        "synth_proportion": 0.0,
+        "abs_diff": 0.0066
+      },
+      "circle": {
+        "real_proportion": 0.0921,
+        "synth_proportion": 0.9121,
+        "abs_diff": 0.82
+      },
+      "square": {
+        "real_proportion": 0.0263,
+        "synth_proportion": 0.0879,
+        "abs_diff": 0.0616
+      }
+    }
+  },
+  "ks_tests": {
+    "Thickness (mm)": {
+      "ks_statistic": 0.184953,
+      "p_value": 0.0,
+      "same_distribution": false
+    },
+    "Precut dimensions (diameter/side length) mm": {
+      "ks_statistic": 0.092302,
+      "p_value": 0.03487,
+      "same_distribution": false
+    },
+    "Total Strain/Elongation (%)": {
+      "ks_statistic": 0.071452,
+      "p_value": 0.174592,
+      "same_distribution": true
+    },
+    "UTS (MPa)": {
+      "ks_statistic": 0.099617,
+      "p_value": 0.017991,
+      "same_distribution": false
+    },
+    "YS (MPa)": {
+      "ks_statistic": 0.074836,
+      "p_value": 0.138245,
+      "same_distribution": true
+    },
+    "Strength Coefficient (k in MPa)": {
+      "ks_statistic": 0.091455,
+      "p_value": 0.037541,
+      "same_distribution": false
+    },
+    "Strain hardening coefficient (n)": {
+      "ks_statistic": 0.077613,
+      "p_value": 0.11322,
+      "same_distribution": true
+    },
+    "Anisotropic (R Value)": {
+      "ks_statistic": 0.082327,
+      "p_value": 0.086042,
+      "same_distribution": true
+    },
+    "Is lubricant used?": {
+      "ks_statistic": 0.006963,
+      "p_value": 1.0,
+      "same_distribution": true
+    },
+    "Feed rate (mm/min)": {
+      "ks_statistic": 0.191209,
+      "p_value": 1e-06,
+      "same_distribution": false
+    },
+    "Tool speed (rpm)": {
+      "ks_statistic": 0.211873,
+      "p_value": 0.0,
+      "same_distribution": false
+    },
+    "Step depth (mm)": {
+      "ks_statistic": 0.191027,
+      "p_value": 0.0,
+      "same_distribution": false
+    },
+    "No of stages": {
+      "ks_statistic": 0.102717,
+      "p_value": 0.015087,
+      "same_distribution": false
+    },
+    "HER": {
+      "ks_statistic": 0.06383,
+      "p_value": 0.411583,
+      "same_distribution": true
+    },
+    "Flange Height (mm)": {
+      "ks_statistic": 0.072818,
+      "p_value": 0.424573,
+      "same_distribution": true
+    },
+    "Roughness (um)": {
+      "ks_statistic": 0.130628,
+      "p_value": 0.261803,
+      "same_distribution": true
+    },
+    "Minimum thickness (after final stage, mm)": {
+      "ks_statistic": 0.318344,
+      "p_value": 0.0,
+      "same_distribution": false
+    },
+    "Final angle after the final stage (degrees)": {
+      "ks_statistic": 0.284669,
+      "p_value": 0.0,
+      "same_distribution": false
+    }
+  },
+  "wasserstein_and_jsd": {
+    "Thickness (mm)": {
+      "wasserstein_distance": 0.034611,
+      "wasserstein_normalised": 0.020006,
+      "jensen_shannon_divergence": 0.075477
+    },
+    "Precut dimensions (diameter/side length) mm": {
+      "wasserstein_distance": 2.041399,
+      "wasserstein_normalised": 0.011632,
+      "jensen_shannon_divergence": 0.039215
+    },
+    "Total Strain/Elongation (%)": {
+      "wasserstein_distance": 0.6456,
+      "wasserstein_normalised": 0.011857,
+      "jensen_shannon_divergence": 0.036022
+    },
+    "UTS (MPa)": {
+      "wasserstein_distance": 5.689977,
+      "wasserstein_normalised": 0.010205,
+      "jensen_shannon_divergence": 0.036433
+    },
+    "YS (MPa)": {
+      "wasserstein_distance": 6.423514,
+      "wasserstein_normalised": 0.011664,
+      "jensen_shannon_divergence": 0.035141
+    },
+    "Strength Coefficient (k in MPa)": {
+      "wasserstein_distance": 15.569886,
+      "wasserstein_normalised": 0.012214,
+      "jensen_shannon_divergence": 0.025079
+    },
+    "Strain hardening coefficient (n)": {
+      "wasserstein_distance": 0.01739,
+      "wasserstein_normalised": 0.00901,
+      "jensen_shannon_divergence": 0.019699
+    },
+    "Anisotropic (R Value)": {
+      "wasserstein_distance": 0.008241,
+      "wasserstein_normalised": 0.002747,
+      "jensen_shannon_divergence": 0.0056
+    },
+    "Is lubricant used?": {
+      "wasserstein_distance": 0.006963,
+      "wasserstein_normalised": 0.006963,
+      "jensen_shannon_divergence": 3.6e-05
+    },
+    "Feed rate (mm/min)": {
+      "wasserstein_distance": 119.363298,
+      "wasserstein_normalised": 0.009951,
+      "jensen_shannon_divergence": 0.028316
+    },
+    "Tool speed (rpm)": {
+      "wasserstein_distance": 92.41048,
+      "wasserstein_normalised": 0.015402,
+      "jensen_shannon_divergence": 0.037558
+    },
+    "Step depth (mm)": {
+      "wasserstein_distance": 0.026599,
+      "wasserstein_normalised": 0.0133,
+      "jensen_shannon_divergence": 0.055097
+    },
+    "No of stages": {
+      "wasserstein_distance": 0.219624,
+      "wasserstein_normalised": 0.027453,
+      "jensen_shannon_divergence": 0.021337
+    },
+    "HER": {
+      "wasserstein_distance": 0.061673,
+      "wasserstein_normalised": 0.011242,
+      "jensen_shannon_divergence": 0.063807
+    },
+    "Flange Height (mm)": {
+      "wasserstein_distance": 0.724515,
+      "wasserstein_normalised": 0.014612,
+      "jensen_shannon_divergence": 0.030797
+    },
+    "Roughness (um)": {
+      "wasserstein_distance": 1.718684,
+      "wasserstein_normalised": 0.017216,
+      "jensen_shannon_divergence": 0.016868
+    },
+    "Minimum thickness (after final stage, mm)": {
+      "wasserstein_distance": 0.143312,
+      "wasserstein_normalised": 0.119427,
+      "jensen_shannon_divergence": 0.160685
+    },
+    "Final angle after the final stage (degrees)": {
+      "wasserstein_distance": 0.839828,
+      "wasserstein_normalised": 0.013997,
+      "jensen_shannon_divergence": 0.030185
+    }
+  },
+  "correlation_analysis": {
+    "frobenius_norm": 1.948555,
+    "mean_abs_corr_diff": 0.060876,
+    "physics_pairs": {
+      "HER <-> Flange Height (mm)": {
+        "real_correlation": -0.0151,
+        "synth_correlation": 0.0053,
+        "expected_sign": 1,
+        "abs_difference": 0.0205,
+        "sign_preserved": false,
+        "physics_sign_real": false,
+        "physics_sign_synth": true
+      },
+      "Step depth (mm) <-> Roughness (um)": {
+        "real_correlation": 0.6961,
+        "synth_correlation": 0.002,
+        "expected_sign": 1,
+        "abs_difference": 0.6941,
+        "sign_preserved": true,
+        "physics_sign_real": true,
+        "physics_sign_synth": true
+      },
+      "Step depth (mm) <-> Minimum thickness (after final stage, mm)": {
+        "real_correlation": 0.1898,
+        "synth_correlation": 0.0109,
+        "expected_sign": -1,
+        "abs_difference": 0.1789,
+        "sign_preserved": true,
+        "physics_sign_real": false,
+        "physics_sign_synth": false
+      },
+      "No of stages <-> HER": {
+        "real_correlation": -0.1194,
+        "synth_correlation": -0.1685,
+        "expected_sign": 1,
+        "abs_difference": 0.0491,
+        "sign_preserved": true,
+        "physics_sign_real": false,
+        "physics_sign_synth": false
+      },
+      "Is lubricant used? <-> Roughness (um)": {
+        "real_correlation": -0.9999,
+        "synth_correlation": -0.5562,
+        "expected_sign": -1,
+        "abs_difference": 0.4437,
+        "sign_preserved": true,
+        "physics_sign_real": true,
+        "physics_sign_synth": true
+      },
+      "Total Strain/Elongation (%) <-> HER": {
+        "real_correlation": 0.2054,
+        "synth_correlation": 0.2106,
+        "expected_sign": 1,
+        "abs_difference": 0.0052,
+        "sign_preserved": true,
+        "physics_sign_real": true,
+        "physics_sign_synth": true
+      },
+      "Anisotropic (R Value) <-> HER": {
+        "real_correlation": 0.1005,
+        "synth_correlation": 0.0429,
+        "expected_sign": 0,
+        "abs_difference": 0.0576,
+        "sign_preserved": true
+      }
+    },
+    "mutual_information": {
+      "HER <-> Flange Height (mm)": {
+        "real_mi": 1.7381,
+        "synth_mi": 0.9589
+      },
+      "Step depth (mm) <-> Roughness (um)": {
+        "real_mi": 0.5747,
+        "synth_mi": 0.7467
+      },
+      "Step depth (mm) <-> Minimum thickness (after final stage, mm)": {
+        "real_mi": 0.6221,
+        "synth_mi": 0.795
+      },
+      "No of stages <-> HER": {
+        "real_mi": 0.501,
+        "synth_mi": 0.3713
+      },
+      "Is lubricant used? <-> Roughness (um)": {
+        "real_mi": 0.349,
+        "synth_mi": 0.1772
+      },
+      "Total Strain/Elongation (%) <-> HER": {
+        "real_mi": 1.4702,
+        "synth_mi": 1.1612
+      },
+      "Anisotropic (R Value) <-> HER": {
+        "real_mi": 1.2953,
+        "synth_mi": 1.1764
+      }
+    }
+  },
+  "feature_importance": {
+    "target_variable": "HER",
+    "n_predictors": 17,
+    "feature_importances": {
+      "Thickness (mm)": {
+        "real_rf_importance": 0.0175,
+        "synth_rf_importance": 0.0212,
+        "real_mi_score": 0.302,
+        "synth_mi_score": 0.3202
+      },
+      "Precut dimensions (diameter/side length) mm": {
+        "real_rf_importance": 0.499,
+        "synth_rf_importance": 0.0738,
+        "real_mi_score": 0.2523,
+        "synth_mi_score": 0.8775
+      },
+      "Total Strain/Elongation (%)": {
+        "real_rf_importance": 0.0177,
+        "synth_rf_importance": 0.0144,
+        "real_mi_score": 0.2977,
+        "synth_mi_score": 0.3172
+      },
+      "UTS (MPa)": {
+        "real_rf_importance": 0.0358,
+        "synth_rf_importance": 0.0193,
+        "real_mi_score": 0.2685,
+        "synth_mi_score": 0.4249
+      },
+      "YS (MPa)": {
+        "real_rf_importance": 0.0155,
+        "synth_rf_importance": 0.308,
+        "real_mi_score": 0.4398,
+        "synth_mi_score": 0.474
+      },
+      "Strength Coefficient (k in MPa)": {
+        "real_rf_importance": 0.0643,
+        "synth_rf_importance": 0.0219,
+        "real_mi_score": 0.3451,
+        "synth_mi_score": 0.307
+      },
+      "Strain hardening coefficient (n)": {
+        "real_rf_importance": 0.014,
+        "synth_rf_importance": 0.0334,
+        "real_mi_score": 0.2289,
+        "synth_mi_score": 0.2187
+      },
+      "Anisotropic (R Value)": {
+        "real_rf_importance": 0.0208,
+        "synth_rf_importance": 0.0067,
+        "real_mi_score": 0.282,
+        "synth_mi_score": 0.4508
+      },
+      "Is lubricant used?": {
+        "real_rf_importance": 0.0,
+        "synth_rf_importance": 0.0006,
+        "real_mi_score": 0.0,
+        "synth_mi_score": 0.0167
+      },
+      "Feed rate (mm/min)": {
+        "real_rf_importance": 0.0071,
+        "synth_rf_importance": 0.0333,
+        "real_mi_score": 0.0276,
+        "synth_mi_score": 0.2728
+      },
+      "Tool speed (rpm)": {
+        "real_rf_importance": 0.001,
+        "synth_rf_importance": 0.2929,
+        "real_mi_score": 0.0,
+        "synth_mi_score": 0.231
+      },
+      "Step depth (mm)": {
+        "real_rf_importance": 0.0036,
+        "synth_rf_importance": 0.0575,
+        "real_mi_score": 0.0,
+        "synth_mi_score": 0.1975
+      },
+      "No of stages": {
+        "real_rf_importance": 0.0101,
+        "synth_rf_importance": 0.0021,
+        "real_mi_score": 0.0628,
+        "synth_mi_score": 0.0342
+      },
+      "Flange Height (mm)": {
+        "real_rf_importance": 0.0875,
+        "synth_rf_importance": 0.0529,
+        "real_mi_score": 0.2195,
+        "synth_mi_score": 0.4996
+      },
+      "Roughness (um)": {
+        "real_rf_importance": 0.0604,
+        "synth_rf_importance": 0.0094,
+        "real_mi_score": 0.2457,
+        "synth_mi_score": 0.199
+      },
+      "Minimum thickness (after final stage, mm)": {
+        "real_rf_importance": 0.1279,
+        "synth_rf_importance": 0.0151,
+        "real_mi_score": 0.1901,
+        "synth_mi_score": 0.1544
+      },
+      "Final angle after the final stage (degrees)": {
+        "real_rf_importance": 0.0179,
+        "synth_rf_importance": 0.0373,
+        "real_mi_score": 0.4529,
+        "synth_mi_score": 0.3796
+      }
+    },
+    "spearman_rf": {
+      "rho": 0.0074,
+      "p_value": 0.977656
+    },
+    "spearman_mi": {
+      "rho": 0.6168,
+      "p_value": 0.008356
+    },
+    "verdict_rf": "FAIL",
+    "verdict_mi": "MARGINAL"
+  }
+}
