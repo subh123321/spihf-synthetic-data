@@ -4,21 +4,55 @@ visualization_module.py
 Comparative visualisation of Original vs Synthetic SPIHF (Single Point
 Incremental Hole Flanging) datasets.
 
-This module produces five publication-quality figure files using
+This module produces publication-quality figure files using
 **matplotlib only** (no seaborn styles):
 
-  1. distribution_comparison.png   – Histograms, KDE, boxplots, violins
-  2. correlation_heatmap.png       – Side-by-side Pearson heatmaps
-  3. pca_comparison.png            – 2-D PCA projections
-  4. tsne_comparison.png           – 2-D t-SNE projections
-  5. engineering_relationships.png – Six domain-specific scatter plots
+  ┌──────────────────────────────────────────────────────────────────┐
+  │ DISTRIBUTION VISUALIZATIONS                                     │
+  │   1. Histograms                                                 │
+  │   2. KDE plots                                                  │
+  │   3. Boxplots                                                   │
+  │   4. Violin plots                                               │
+  ├──────────────────────────────────────────────────────────────────┤
+  │ MULTIVARIATE VISUALIZATIONS                                     │
+  │   1. Correlation heatmaps                                       │
+  │   2. PCA projections                                            │
+  │   3. t-SNE projections                                          │
+  │   4. UMAP projections (optional — requires umap-learn)          │
+  ├──────────────────────────────────────────────────────────────────┤
+  │ ENGINEERING RELATIONSHIPS                                       │
+  │   • HER vs Flange Height                                        │
+  │   • Step Depth vs Roughness                                     │
+  │   • Stages vs HER                                               │
+  │   • Thickness vs Minimum Thickness                              │
+  │   • Elongation vs HER                                           │
+  │   • R-value vs HER                                              │
+  └──────────────────────────────────────────────────────────────────┘
 
-Optionally generates:
-  6. umap_comparison.png           – 2-D UMAP projections (if umap-learn
-                                     is installed)
+Output files:
+  distribution_comparison.png
+  boxviolin_comparison.png
+  correlation_heatmap.png
+  pca_comparison.png
+  tsne_comparison.png
+  umap_comparison.png  (optional)
+  engineering_relationships.png
 
-All colour palettes are derived programmatically — no hardcoded hex
-values — ensuring consistency and accessibility.
+Functions:
+  plot_distributions()
+  plot_boxplots()
+  plot_correlation_heatmaps()
+  perform_pca_analysis()
+  perform_tsne_analysis()
+  perform_umap_analysis()      (optional)
+  plot_engineering_relationships()
+  save_all_figures()
+
+Design constraints:
+  • matplotlib only — no seaborn styles.
+  • No hardcoded colours — all derived programmatically from
+    matplotlib's active property cycle.
+  • Reproducible via np.random.seed(42).
 
 Author : Visualisation Module (auto-generated)
 Seed   : np.random.seed(42)
@@ -54,23 +88,31 @@ except ImportError:
     HAS_UMAP = False
 
 # ──────────────────────────── Colour Palette ─────────────────────────
-# Derived from matplotlib's default colour cycle — no hardcoding.
+# All colours are derived programmatically from the active matplotlib
+# property cycle.  Nothing is hardcoded.
 _PROP_CYCLE = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
+
 def _real_color(alpha: float = 1.0) -> Tuple[float, ...]:
-    """Return RGBA for the 'Real' dataset from the active prop cycle."""
-    rgba = matplotlib.colors.to_rgba(_PROP_CYCLE[0], alpha)
-    return rgba
+    """Return RGBA for the 'Real / Original' dataset.
+
+    Pulls from position 0 of the active property cycle so the hue
+    automatically follows the user's chosen matplotlib style.
+    """
+    return matplotlib.colors.to_rgba(_PROP_CYCLE[0], alpha)
+
 
 def _synth_color(alpha: float = 1.0) -> Tuple[float, ...]:
-    """Return RGBA for the 'Synthetic' dataset from the active prop cycle."""
-    rgba = matplotlib.colors.to_rgba(_PROP_CYCLE[1], alpha)
-    return rgba
+    """Return RGBA for the 'Synthetic' dataset (position 1 in cycle)."""
+    return matplotlib.colors.to_rgba(_PROP_CYCLE[1], alpha)
+
 
 def _accent_color(idx: int = 2, alpha: float = 1.0) -> Tuple[float, ...]:
-    """Return an accent colour from the prop cycle."""
-    rgba = matplotlib.colors.to_rgba(_PROP_CYCLE[idx % len(_PROP_CYCLE)], alpha)
-    return rgba
+    """Return an accent colour from position *idx* of the prop cycle."""
+    return matplotlib.colors.to_rgba(
+        _PROP_CYCLE[idx % len(_PROP_CYCLE)], alpha
+    )
+
 
 # ──────────────────────────── Constants ──────────────────────────────
 NUMERIC_FEATURES: List[str] = [
@@ -119,7 +161,7 @@ ENGINEERING_PAIRS: List[Tuple[str, str, str, str]] = [
     ("HER", "Flange Height (mm)",
      "Hole Expansion Ratio (HER)", "Flange Height (mm)"),
     ("Step depth (mm)", "Roughness (um)",
-     "Step Depth (mm)", "Surface Roughness (um)"),
+     "Step Depth (mm)", "Surface Roughness (\u00b5m)"),
     ("No of stages", "HER",
      "Number of Stages", "HER"),
     ("Thickness (mm)", "Minimum thickness (after final stage, mm)",
@@ -144,7 +186,7 @@ _RAW_TO_CANONICAL: Dict[str, str] = {
 }
 
 # ──────────────────────────── Global rcParams ────────────────────────
-# A clean, modern look without seaborn — purely matplotlib rcParams.
+# A clean, modern look — purely matplotlib rcParams, no seaborn.
 _RC_OVERRIDES: Dict[str, Any] = {
     "font.family": "sans-serif",
     "font.size": 10,
@@ -195,7 +237,7 @@ def _harmonise_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df.rename(columns=_RAW_TO_CANONICAL, inplace=True)
 
-    # Handle roughness column name (mu symbol encoding)
+    # Handle roughness column name (mu symbol encoding varies)
     for col in list(df.columns):
         if "Roughness" in col and col not in NUMERIC_FEATURES:
             df.rename(columns={col: "Roughness (um)"}, inplace=True)
@@ -231,7 +273,11 @@ def _short(col: str) -> str:
 
 
 def _safe_kde(data: np.ndarray, x_grid: np.ndarray) -> np.ndarray:
-    """Compute a KDE, returning zeros if the data is degenerate."""
+    """Compute a KDE, returning zeros if the data is degenerate.
+
+    Uses Scott's rule for bandwidth selection.  Degeneracy is detected
+    by checking for < 3 finite values or near-zero standard deviation.
+    """
     clean = data[np.isfinite(data)]
     if len(clean) < 3 or np.std(clean) < 1e-12:
         return np.zeros_like(x_grid)
@@ -246,10 +292,13 @@ def _prepare_numeric(
     real: pd.DataFrame,
     synth: pd.DataFrame,
 ) -> Tuple[List[str], pd.DataFrame, pd.DataFrame]:
-    """Return the list of plottable numeric columns and clean subsets."""
+    """Return the list of plottable numeric columns and clean subsets.
+
+    A column is kept only if both datasets have >= 5 non-NaN rows for
+    that column — otherwise statistical summaries are unreliable.
+    """
     avail = [c for c in NUMERIC_FEATURES
              if c in real.columns and c in synth.columns]
-    # Keep only columns with >= 5 non-NaN values in both datasets
     keep = []
     for c in avail:
         if real[c].dropna().shape[0] >= 5 and synth[c].dropna().shape[0] >= 5:
@@ -258,7 +307,7 @@ def _prepare_numeric(
 
 
 # ════════════════════════════════════════════════════════════════════
-#  1.  DISTRIBUTION PLOTS (histograms + KDE)
+#  1.  DISTRIBUTION PLOTS  (Histograms + KDE)
 # ════════════════════════════════════════════════════════════════════
 def plot_distributions(
     real: pd.DataFrame,
@@ -268,7 +317,7 @@ def plot_distributions(
     """Plot overlaid histograms and KDE curves for every numeric feature.
 
     For each feature, a single axes shows:
-      - A semi-transparent histogram for the real data.
+      - A semi-transparent histogram for the real (original) data.
       - A semi-transparent histogram for the synthetic data.
       - KDE smoothed density curves for both.
 
@@ -323,11 +372,13 @@ def plot_distributions(
         bins = np.linspace(lo - margin, hi + margin, n_bins + 1)
         x_grid = np.linspace(lo - margin, hi + margin, 300)
 
+        # Histograms
         ax.hist(rv, bins=bins, density=True, color=rc,
-                edgecolor=rc_line, linewidth=0.4, label="Real", zorder=2)
+                edgecolor=rc_line, linewidth=0.4, label="Original", zorder=2)
         ax.hist(sv, bins=bins, density=True, color=sc,
                 edgecolor=sc_line, linewidth=0.4, label="Synthetic", zorder=2)
 
+        # KDE overlays
         kde_r = _safe_kde(rv, x_grid)
         kde_s = _safe_kde(sv, x_grid)
         ax.plot(x_grid, kde_r, color=rc_line, linewidth=1.6, zorder=3)
@@ -343,7 +394,7 @@ def plot_distributions(
         row_idx, col_idx = divmod(j, ncols_grid)
         axes[row_idx, col_idx].set_visible(False)
 
-    fig.suptitle("Distribution Comparison: Real vs Synthetic SPIHF Data",
+    fig.suptitle("Distribution Comparison: Original vs Synthetic SPIHF Data",
                  fontsize=14, fontweight="bold", y=1.01)
     fig.tight_layout()
     return fig
@@ -356,12 +407,12 @@ def plot_boxplots(
     real: pd.DataFrame,
     synth: pd.DataFrame,
 ) -> matplotlib.figure.Figure:
-    """Side-by-side boxplots and violin plots for each numeric feature.
+    """Side-by-side boxplots with violin overlays for each numeric feature.
 
-    Each feature gets two rows: the top row shows paired box plots, the
-    bottom row shows paired violin plots.  This simultaneously reveals
-    the median, IQR, outlier envelope (box) and the full density shape
-    (violin).
+    Each feature gets one axes showing paired box plots with
+    semi-transparent violin overlays.  This simultaneously reveals
+    the median, IQR, outlier envelope (box) and the full density
+    shape (violin).
 
     Parameters
     ----------
@@ -403,7 +454,7 @@ def plot_boxplots(
         rv = real[col].dropna().values.astype(float)
         sv = synth[col].dropna().values.astype(float)
 
-        # Boxplots
+        # ── Boxplots ────────────────────────────────────────────────
         bp = ax.boxplot(
             [rv, sv],
             positions=[1, 2],
@@ -418,7 +469,7 @@ def plot_boxplots(
         bp["boxes"][1].set_facecolor(sc_face)
         bp["boxes"][1].set_edgecolor(sc_edge)
 
-        # Violin overlays
+        # ── Violin overlays ─────────────────────────────────────────
         if len(rv) >= 5 and np.std(rv) > 1e-12:
             vp_r = ax.violinplot([rv], positions=[1], widths=0.55,
                                  showmeans=False, showmedians=False,
@@ -438,7 +489,7 @@ def plot_boxplots(
                 body.set_alpha(0.25)
 
         ax.set_xticks([1, 2])
-        ax.set_xticklabels(["Real", "Synthetic"])
+        ax.set_xticklabels(["Original", "Synthetic"])
         ax.set_title(_short(col))
 
     # Turn off unused axes
@@ -446,8 +497,10 @@ def plot_boxplots(
         row_idx, col_idx = divmod(j, ncols_grid)
         axes[row_idx, col_idx].set_visible(False)
 
-    fig.suptitle("Box + Violin Comparison: Real vs Synthetic SPIHF Data",
-                 fontsize=14, fontweight="bold", y=1.01)
+    fig.suptitle(
+        "Box + Violin Comparison: Original vs Synthetic SPIHF Data",
+        fontsize=14, fontweight="bold", y=1.01,
+    )
     fig.tight_layout()
     return fig
 
@@ -461,10 +514,10 @@ def plot_correlation_heatmaps(
 ) -> matplotlib.figure.Figure:
     """Side-by-side Pearson correlation heatmaps plus a difference map.
 
-    Three panels are shown:
-      - Left:   Real data correlation matrix.
+    Three panels:
+      - Left:   Original data correlation matrix.
       - Centre: Synthetic data correlation matrix.
-      - Right:  Element-wise difference (Real - Synthetic).
+      - Right:  Element-wise difference (Original − Synthetic).
 
     Parameters
     ----------
@@ -482,7 +535,8 @@ def plot_correlation_heatmaps(
     ----------------
     The difference panel highlights where the synthetic data has gained
     or lost correlations.  Blue = synthetic overestimates (more positive
-    than real), red = synthetic underestimates.  Ideal = all white.
+    than real), red = synthetic underestimates.  Ideal = all white
+    (zero difference).
     """
     cols, _, _ = _prepare_numeric(real, synth)
     short_labels = [_short(c) for c in cols]
@@ -491,14 +545,20 @@ def plot_correlation_heatmaps(
     s_corr = synth[cols].corr().values
     diff = r_corr - s_corr
 
-    # Build diverging colormaps from the prop cycle
+    # Built-in diverging colormaps — no hardcoded hex
     cmap_main = plt.cm.RdBu_r
     cmap_diff = plt.cm.PiYG
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(22, 7))
 
-    def _draw_heatmap(ax: plt.Axes, data: np.ndarray, title: str,
-                      cmap: Any, vmin: float, vmax: float) -> None:
+    def _draw_heatmap(
+        ax: plt.Axes,
+        data: np.ndarray,
+        title: str,
+        cmap: Any,
+        vmin: float,
+        vmax: float,
+    ) -> None:
         im = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax,
                        aspect="equal", interpolation="nearest")
         ax.set_xticks(range(len(short_labels)))
@@ -506,7 +566,7 @@ def plot_correlation_heatmaps(
         ax.set_xticklabels(short_labels, rotation=55, ha="right", fontsize=7)
         ax.set_yticklabels(short_labels, fontsize=7)
         ax.set_title(title, fontweight="bold")
-        # Annotate cells
+        # Annotate each cell
         for ii in range(data.shape[0]):
             for jj in range(data.shape[1]):
                 val = data[ii, jj]
@@ -518,13 +578,13 @@ def plot_correlation_heatmaps(
         cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
         cbar.ax.tick_params(labelsize=7)
 
-    _draw_heatmap(ax1, r_corr, "Real Data Correlations",
+    _draw_heatmap(ax1, r_corr, "Original Data Correlations",
                   cmap_main, -1, 1)
     _draw_heatmap(ax2, s_corr, "Synthetic Data Correlations",
                   cmap_main, -1, 1)
 
     max_diff = max(np.nanmax(np.abs(diff)), 0.1)
-    _draw_heatmap(ax3, diff, "Difference (Real - Synthetic)",
+    _draw_heatmap(ax3, diff, "Difference (Original \u2212 Synthetic)",
                   cmap_diff, -max_diff, max_diff)
 
     fig.suptitle("Correlation Matrix Comparison", fontsize=14,
@@ -542,11 +602,11 @@ def perform_pca_analysis(
 ) -> matplotlib.figure.Figure:
     """Project both datasets into 2-D PCA space for visual comparison.
 
-    The PCA is fitted on the *combined* dataset so that both point
-    clouds share the same principal axes.  Four panels are shown:
+    The PCA is fitted on the *combined* dataset so both point clouds
+    share the same principal axes.  Four panels:
 
-      - Top-left:     Real samples in PC1-PC2.
-      - Top-right:    Synthetic samples in PC1-PC2.
+      - Top-left:     Original samples in PC1–PC2.
+      - Top-right:    Synthetic samples in PC1–PC2.
       - Bottom-left:  Overlay of both.
       - Bottom-right: Explained variance (scree plot).
 
@@ -574,12 +634,10 @@ def perform_pca_analysis(
 
     r_clean = real[cols].dropna()
     s_clean = synth[cols].dropna()
-
     combined = pd.concat([r_clean, s_clean], axis=0, ignore_index=True)
 
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(combined.values)
-
     n_r = len(r_clean)
 
     pca = PCA(n_components=min(10, X_scaled.shape[1]), random_state=42)
@@ -599,23 +657,24 @@ def perform_pca_analysis(
     xl = f"PC1 ({ev[0]:.1f}%)"
     yl = f"PC2 ({ev[1]:.1f}%)"
 
-    # Real only
+    # Panel 1: Original only
     axes[0, 0].scatter(X_r[:, 0], X_r[:, 1], c=[rc], edgecolors=[rc_edge],
                        s=30, linewidths=0.4, alpha=0.7, zorder=2)
-    axes[0, 0].set_title("Real Data")
+    axes[0, 0].set_title("Original Data")
     axes[0, 0].set_xlabel(xl)
     axes[0, 0].set_ylabel(yl)
 
-    # Synthetic only
+    # Panel 2: Synthetic only
     axes[0, 1].scatter(X_s[:, 0], X_s[:, 1], c=[sc], edgecolors=[sc_edge],
                        s=20, linewidths=0.3, alpha=0.5, zorder=2)
     axes[0, 1].set_title("Synthetic Data")
     axes[0, 1].set_xlabel(xl)
     axes[0, 1].set_ylabel(yl)
 
-    # Overlay
+    # Panel 3: Overlay
     axes[1, 0].scatter(X_r[:, 0], X_r[:, 1], c=[rc], edgecolors=[rc_edge],
-                       s=35, linewidths=0.4, alpha=0.7, label="Real", zorder=3)
+                       s=35, linewidths=0.4, alpha=0.7, label="Original",
+                       zorder=3)
     axes[1, 0].scatter(X_s[:, 0], X_s[:, 1], c=[sc], edgecolors=[sc_edge],
                        s=18, linewidths=0.3, alpha=0.35, label="Synthetic",
                        zorder=2)
@@ -624,7 +683,7 @@ def perform_pca_analysis(
     axes[1, 0].set_ylabel(yl)
     axes[1, 0].legend()
 
-    # Scree plot
+    # Panel 4: Scree plot
     n_comp = len(ev)
     x_comp = np.arange(1, n_comp + 1)
     axes[1, 1].bar(x_comp, ev, color=_accent_color(2, 0.7),
@@ -641,7 +700,7 @@ def perform_pca_analysis(
     axes[1, 1].set_xticks(x_comp)
     axes[1, 1].legend()
 
-    fig.suptitle("PCA Projection: Real vs Synthetic SPIHF Data",
+    fig.suptitle("PCA Projection: Original vs Synthetic SPIHF Data",
                  fontsize=14, fontweight="bold", y=1.01)
     fig.tight_layout()
     return fig
@@ -658,7 +717,7 @@ def perform_tsne_analysis(
     """Project both datasets into 2-D t-SNE space.
 
     t-SNE is fitted on the *combined* (standardised) dataset.  Three
-    panels show the real data, synthetic data, and overlay.
+    panels show the original data, synthetic data, and overlay.
 
     Parameters
     ----------
@@ -678,8 +737,9 @@ def perform_tsne_analysis(
     ----------------
     t-SNE preserves local neighbourhood structure better than PCA.
     If the synthetic points form tight clusters that do not overlap
-    with the real data clusters, the interpolation step is producing
-    points in "gaps" of the real manifold — a sign of poor fidelity.
+    with the original data clusters, the interpolation step is
+    producing points in "gaps" of the real manifold — a sign of
+    poor fidelity.
     """
     cols, _, _ = _prepare_numeric(real, synth)
 
@@ -713,16 +773,18 @@ def perform_tsne_analysis(
 
     axes[0].scatter(X_r[:, 0], X_r[:, 1], c=[rc], edgecolors=[rc_edge],
                     s=30, linewidths=0.4, alpha=0.7)
-    axes[0].set_title("Real Data")
+    axes[0].set_title("Original Data")
 
     axes[1].scatter(X_s[:, 0], X_s[:, 1], c=[sc], edgecolors=[sc_edge],
                     s=20, linewidths=0.3, alpha=0.5)
     axes[1].set_title("Synthetic Data")
 
     axes[2].scatter(X_r[:, 0], X_r[:, 1], c=[rc], edgecolors=[rc_edge],
-                    s=35, linewidths=0.4, alpha=0.7, label="Real", zorder=3)
+                    s=35, linewidths=0.4, alpha=0.7, label="Original",
+                    zorder=3)
     axes[2].scatter(X_s[:, 0], X_s[:, 1], c=[sc], edgecolors=[sc_edge],
-                    s=18, linewidths=0.3, alpha=0.35, label="Synthetic", zorder=2)
+                    s=18, linewidths=0.3, alpha=0.35, label="Synthetic",
+                    zorder=2)
     axes[2].set_title("Overlay")
     axes[2].legend()
 
@@ -731,7 +793,7 @@ def perform_tsne_analysis(
         ax.set_ylabel("t-SNE Dim 2")
 
     fig.suptitle(f"t-SNE Projection (perplexity={perp:.0f}): "
-                 f"Real vs Synthetic SPIHF Data",
+                 f"Original vs Synthetic SPIHF Data",
                  fontsize=14, fontweight="bold", y=1.02)
     fig.tight_layout()
     return fig
@@ -768,7 +830,7 @@ def perform_umap_analysis(
     ----------------
     UMAP better preserves global structure than t-SNE and is faster on
     larger datasets.  It is especially useful for checking whether the
-    synthetic data fills the same manifold "holes" as the real data.
+    synthetic data fills the same manifold "holes" as the original data.
     """
     if not HAS_UMAP:
         print("[perform_umap_analysis] umap-learn not installed -- skipping.")
@@ -799,16 +861,18 @@ def perform_umap_analysis(
 
     axes[0].scatter(X_r[:, 0], X_r[:, 1], c=[rc], edgecolors=[rc_edge],
                     s=30, linewidths=0.4, alpha=0.7)
-    axes[0].set_title("Real Data")
+    axes[0].set_title("Original Data")
 
     axes[1].scatter(X_s[:, 0], X_s[:, 1], c=[sc], edgecolors=[sc_edge],
                     s=20, linewidths=0.3, alpha=0.5)
     axes[1].set_title("Synthetic Data")
 
     axes[2].scatter(X_r[:, 0], X_r[:, 1], c=[rc], edgecolors=[rc_edge],
-                    s=35, linewidths=0.4, alpha=0.7, label="Real", zorder=3)
+                    s=35, linewidths=0.4, alpha=0.7, label="Original",
+                    zorder=3)
     axes[2].scatter(X_s[:, 0], X_s[:, 1], c=[sc], edgecolors=[sc_edge],
-                    s=18, linewidths=0.3, alpha=0.35, label="Synthetic", zorder=2)
+                    s=18, linewidths=0.3, alpha=0.35, label="Synthetic",
+                    zorder=2)
     axes[2].set_title("Overlay")
     axes[2].legend()
 
@@ -816,7 +880,7 @@ def perform_umap_analysis(
         ax.set_xlabel("UMAP Dim 1")
         ax.set_ylabel("UMAP Dim 2")
 
-    fig.suptitle("UMAP Projection: Real vs Synthetic SPIHF Data",
+    fig.suptitle("UMAP Projection: Original vs Synthetic SPIHF Data",
                  fontsize=14, fontweight="bold", y=1.02)
     fig.tight_layout()
     return fig
@@ -831,15 +895,15 @@ def plot_engineering_relationships(
 ) -> matplotlib.figure.Figure:
     """Plot six domain-specific engineering scatter relationships.
 
-    Each panel shows real vs synthetic data side-by-side for one of
-    the key SPIHF process-response relationships:
+    Each panel shows original vs synthetic data side-by-side for one
+    of the key SPIHF process–response relationships:
 
-      1. HER vs Flange Height — forming severity indicator.
-      2. Step Depth vs Roughness — surface quality driver.
-      3. Stages vs HER — multi-pass effect.
-      4. Thickness vs Minimum Thickness — thinning law.
-      5. Elongation vs HER — material formability.
-      6. R-value vs HER — anisotropy effect.
+      1. HER vs Flange Height        — forming severity indicator.
+      2. Step Depth vs Roughness      — surface quality driver.
+      3. Stages vs HER               — multi-pass effect.
+      4. Thickness vs Min Thickness   — thinning law.
+      5. Elongation vs HER           — material formability.
+      6. R-value vs HER              — anisotropy effect.
 
     Parameters
     ----------
@@ -855,10 +919,11 @@ def plot_engineering_relationships(
 
     Engineering note
     ----------------
-    These plots encode the most fundamental physics of incremental hole
-    flanging.  If the synthetic data distorts these relationships (e.g.
-    inverts the Thickness vs Min-Thickness trend), the data is unsuitable
-    for training surrogate models or feeding into FEA calibration.
+    These plots encode the most fundamental physics of incremental
+    hole flanging.  If the synthetic data distorts these relationships
+    (e.g. inverts the Thickness vs Min-Thickness trend), the data is
+    unsuitable for training surrogate models or feeding into FEA
+    calibration.
     """
     fig, axes = plt.subplots(2, 3, figsize=(18, 11))
     axes_flat = axes.flatten()
@@ -871,13 +936,13 @@ def plot_engineering_relationships(
     for idx, (xcol, ycol, xlabel, ylabel) in enumerate(ENGINEERING_PAIRS):
         ax = axes_flat[idx]
 
-        # Real data
+        # ── Original data ───────────────────────────────────────────
         if xcol in real.columns and ycol in real.columns:
             rr = real[[xcol, ycol]].dropna()
             ax.scatter(rr[xcol], rr[ycol], c=[rc], edgecolors=[rc_edge],
                        s=40, linewidths=0.5, alpha=0.8,
-                       label="Real", zorder=3)
-            # Add trend line for real data
+                       label="Original", zorder=3)
+            # Linear trend line for original data
             if len(rr) >= 3:
                 try:
                     z = np.polyfit(rr[xcol].values, rr[ycol].values, 1)
@@ -889,13 +954,13 @@ def plot_engineering_relationships(
                 except Exception:
                     pass
 
-        # Synthetic data
+        # ── Synthetic data ──────────────────────────────────────────
         if xcol in synth.columns and ycol in synth.columns:
             ss = synth[[xcol, ycol]].dropna()
             ax.scatter(ss[xcol], ss[ycol], c=[sc], edgecolors=[sc_edge],
                        s=20, linewidths=0.3, alpha=0.45,
                        label="Synthetic", zorder=2)
-            # Trend line for synthetic data
+            # Linear trend line for synthetic data
             if len(ss) >= 3:
                 try:
                     z2 = np.polyfit(ss[xcol].values, ss[ycol].values, 1)
@@ -913,8 +978,10 @@ def plot_engineering_relationships(
                      fontweight="bold")
         ax.legend(loc="best", frameon=True)
 
-    fig.suptitle("Engineering Relationships: Real vs Synthetic SPIHF Data",
-                 fontsize=14, fontweight="bold", y=1.01)
+    fig.suptitle(
+        "Engineering Relationships: Original vs Synthetic SPIHF Data",
+        fontsize=14, fontweight="bold", y=1.01,
+    )
     fig.tight_layout()
     return fig
 
@@ -970,43 +1037,43 @@ def main() -> None:
 
     real = _harmonise_columns(real_raw)
     synth = _harmonise_columns(synth_raw)
-    print(f"  Real  : {real.shape[0]} rows x {real.shape[1]} cols")
-    print(f"  Synth : {synth.shape[0]} rows x {synth.shape[1]} cols")
+    print(f"  Original : {real.shape[0]} rows x {real.shape[1]} cols")
+    print(f"  Synthetic: {synth.shape[0]} rows x {synth.shape[1]} cols")
     print()
 
     figures: Dict[str, matplotlib.figure.Figure] = {}
 
     # ── 1. Distribution comparison ─────────────────────────────────
-    print("[1/6] Plotting distribution histograms + KDE...")
+    print("[1/7] Plotting distribution histograms + KDE...")
     figures["distribution_comparison"] = plot_distributions(real, synth)
 
     # ── 2. Boxplots + Violin plots ─────────────────────────────────
-    print("[2/6] Plotting box + violin plots...")
+    print("[2/7] Plotting box + violin plots...")
     fig_box = plot_boxplots(real, synth)
-    # Save separately (not in the required list but useful)
     fig_box.savefig("boxviolin_comparison.png")
     plt.close(fig_box)
     print("       -> Saved 'boxviolin_comparison.png'.")
 
     # ── 3. Correlation heatmaps ────────────────────────────────────
-    print("[3/6] Plotting correlation heatmaps...")
+    print("[3/7] Plotting correlation heatmaps...")
     figures["correlation_heatmap"] = plot_correlation_heatmaps(real, synth)
 
     # ── 4. PCA ─────────────────────────────────────────────────────
-    print("[4/6] Performing PCA analysis...")
+    print("[4/7] Performing PCA analysis...")
     figures["pca_comparison"] = perform_pca_analysis(real, synth)
 
     # ── 5. t-SNE ───────────────────────────────────────────────────
-    print("[5/6] Performing t-SNE analysis...")
+    print("[5/7] Performing t-SNE analysis...")
     figures["tsne_comparison"] = perform_tsne_analysis(real, synth)
 
-    # ── 5b. UMAP (optional) ───────────────────────────────────────
+    # ── 6. UMAP (optional) ────────────────────────────────────────
+    print("[6/7] Performing UMAP analysis (if available)...")
     umap_fig = perform_umap_analysis(real, synth)
     if umap_fig is not None:
         figures["umap_comparison"] = umap_fig
 
-    # ── 6. Engineering relationships ───────────────────────────────
-    print("[6/6] Plotting engineering relationships...")
+    # ── 7. Engineering relationships ───────────────────────────────
+    print("[7/7] Plotting engineering relationships...")
     figures["engineering_relationships"] = plot_engineering_relationships(
         real, synth
     )

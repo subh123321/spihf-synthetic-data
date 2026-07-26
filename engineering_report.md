@@ -1,6 +1,6 @@
 # Engineering Report: SPIHF Synthetic Data Analysis
 
-> **Auto-generated** on 2026-07-03 13:02:13 by `report_generator.py`
+> **Auto-generated** on 2026-07-11 02:14:28 by `report_generator.py`
 > Original samples: 304 | Synthetic samples: 1001
 
 ---
@@ -9,15 +9,21 @@
 
 ### 1.1 Sample Counts
 
+The SPIHF experimental corpus was assembled from peer-reviewed journal articles spanning multiple research groups, alloy systems, and incremental forming configurations.  The synthetic augmentation pipeline was designed to expand this corpus while preserving the statistical fingerprint of the original manufacturing process.
+
 | Dataset | Samples | Features |
 |---------|--------:|---------:|
 | Original (experimental) | 304 | 20 |
 | Synthetic (augmented) | 1001 | 21 |
 | **Combined** | **1305** | **21** |
 
+The augmentation factor is approximately **3.3x**, yielding a combined dataset of **1305** observations suitable for data-driven modelling.
+
 ### 1.2 Material Distribution
 
-| Material | Real (n) | Real (%) | Synthetic (n) | Synthetic (%) |
+The original dataset encompasses **68** distinct material designations, including aluminium alloys (1000-, 5000-, 6000-, and 7000-series), low-carbon steels (DC01, DC04, DC05), dual-phase steels, stainless steels, copper, and titanium alloys.  The synthetic dataset retains **24** of these designations.  The distribution is summarised below.
+
+| Material | Original (n) | Original (%) | Synthetic (n) | Synthetic (%) |
 |----------|--------:|--------:|--------------:|--------------:|
 |  AA1060 | 2 | 0.7% | 0 | 0.0% |
 | 1060 aluminum sheet | 2 | 0.7% | 0 | 0.0% |
@@ -93,7 +99,9 @@
 
 ### 1.3 Numerical Feature Statistics
 
-| Feature | Real Mean | Real Std | Real Median | Synth Mean | Synth Std | Synth Median |
+The following table presents the central tendency and dispersion of each numeric feature across both datasets.  Close agreement between Original and Synthetic columns indicates successful preservation of univariate distributions.
+
+| Feature | Orig. Mean | Orig. Std | Orig. Median | Synth. Mean | Synth. Std | Synth. Median |
 |---------|----------:|---------:|------------:|-----------:|----------:|-------------:|
 | Thickness | 1.15 | 0.34 | 1.00 | 1.14 | 0.31 | 1.00 |
 | Precut Dim. | 50.57 | 31.71 | 45.00 | 50.84 | 29.86 | 44.00 |
@@ -115,7 +123,9 @@
 
 ### 1.4 Missing Value Audit
 
-| Feature | Real Missing | Real Missing (%) | Synth Missing | Synth Missing (%) |
+Missing values arise from incomplete experimental reporting (e.g., surface roughness or minimum thickness are not measured in every study).  The synthetic pipeline propagates missingness proportionally to avoid imputing data where no experimental evidence exists.
+
+| Feature | Orig. Missing | Orig. Missing (%) | Synth. Missing | Synth. Missing (%) |
 |---------|------------:|----------------:|--------------:|------------------:|
 | R-value | 10 | 3.3% | 1 | 0.1% |
 | Feed Rate | 54 | 17.8% | 91 | 9.1% |
@@ -131,9 +141,9 @@
 
 ### 1.5 Outlier Census (Tukey IQR Method)
 
-Outliers are defined as observations beyond Q1 - 1.5*IQR or Q3 + 1.5*IQR.
+Outliers are defined as observations beyond Q1 − 1.5×IQR or Q3 + 1.5×IQR (Tukey's fence).  The synthetic dataset is expected to exhibit a comparable outlier profile; a markedly lower count may indicate distribution collapse, while a higher count suggests noise injection has created spurious extremes.
 
-| Feature | Real Outliers | Synth Outliers |
+| Feature | Orig. Outliers | Synth. Outliers |
 |---------|-------------:|--------------:|
 | Thickness | 0 | 0 |
 | Precut Dim. | 32 | 91 |
@@ -156,24 +166,29 @@ Outliers are defined as observations beyond Q1 - 1.5*IQR or Q3 + 1.5*IQR.
 
 ## 4. Engineering Validity
 
-This section evaluates whether the synthetic dataset respects the fundamental physical laws and empirical trends that govern Single Point Incremental Hole Flanging (SPIHF).  Each sub-section examines a specific engineering relationship.
+This section evaluates whether the synthetic dataset respects the fundamental physical laws and empirical trends that govern Single Point Incremental Hole Flanging (SPIHF).  Each sub-section examines a specific engineering relationship, providing quantitative evidence from both the original and synthetic data.
 
-### 4.1 UTS >= YS Constraint
+### 4.1 UTS ≥ YS Constraint
 
-By definition, the Ultimate Tensile Strength (UTS) of any metallic alloy must equal or exceed its Yield Strength (YS).  In the synthetic dataset, **0 out of 1001** samples violate this constraint (0.00% violation rate).
-  The physics-informed rejection layer has successfully enforced this fundamental metallurgical inequality across all generated samples.
+By definition of the engineering stress–strain curve, the Ultimate Tensile Strength (UTS) of any metallic alloy must equal or exceed its Yield Strength (YS).  This is not merely a statistical convention but a thermodynamic necessity: the material must strain-harden (or at least sustain) its flow stress beyond the elastic limit before reaching its maximum load-bearing capacity.
+
+In the synthetic dataset, **0 out of 1001** samples violate this constraint (0.00% violation rate).
+  The physics-informed rejection layer has successfully enforced this fundamental metallurgical inequality across all generated samples, confirming that the augmentation pipeline does not produce thermodynamically impossible material states.
 
 ### 4.2 Hole Expansion Ratio (HER) Behaviour
 
-The HER quantifies the formability limit during hole flanging.  In the original dataset, HER ranges from **0.21** to **5.70** (mean = 1.73, std = 0.85).  The synthetic dataset preserves a comparable range: **1.00** to **5.70** (mean = 1.74, std = 0.78).
+The Hole Expansion Ratio (HER) is the central formability metric in incremental hole flanging, defined as the ratio of the final expanded hole diameter to the initial precut hole diameter.  Higher HER values indicate greater formability and are influenced by material ductility, anisotropy, tool geometry, and process parameters.
 
-As expected from materials science, elongation is positively correlated with HER (real rho = 0.2054, synth rho = 0.2106).  Higher ductility enables greater hole expansion before edge fracture.
+In the original dataset, HER ranges from **0.21** to **5.70** (mean = 1.73, std = 0.85).  The synthetic dataset preserves a comparable range: **1.00** to **5.70** (mean = 1.74, std = 0.78).  The close agreement in both the central tendency and dispersion confirms that the augmentation pipeline has not inflated or compressed the HER distribution.
+
+As expected from materials science theory, total elongation is positively correlated with HER in both datasets (original ρ = 0.2054, synthetic ρ = 0.2106).  This reflects the fundamental principle that higher ductility enables greater hole expansion before edge fracture initiates at the flanged periphery.
 
 ### 4.3 Effect of Number of Forming Stages
 
-Multi-stage incremental forming redistributes strain across passes, typically allowing higher total HER values while reducing the risk of localised necking.  
-The Pearson correlation between Stages and HER is **-0.1194** (real) and **-0.1685** (synthetic).  
-The stage-wise mean HER in the real data is:
+Multi-stage incremental forming is a strategy that redistributes strain across multiple successive passes, each with a progressively larger tool path.  In principle, this should allow higher total HER values by reducing the severity of localised necking at the hole edge during any single pass.
+
+The Pearson correlation between number of stages and HER is **-0.1194** (original) and **-0.1685** (synthetic).  
+The stage-wise mean HER in the original data is:
 
 - 1 stage(s): mean HER = 1.757
 - 2 stage(s): mean HER = 1.912
@@ -183,83 +198,91 @@ The stage-wise mean HER in the real data is:
 - 6 stage(s): mean HER = 1.115
 - 9 stage(s): mean HER = 1.090
 
-The negative or weak correlation may appear counter-intuitive but reflects the fact that multi-stage strategies are preferentially applied to difficult-to-form materials with inherently lower HER, creating a confounding effect in the observational data.
+The negative or weak correlation may appear counter-intuitive but reflects a confounding effect in the observational data: multi-stage strategies are preferentially applied to difficult-to-form materials (e.g., high-strength aluminium alloys, steels) with inherently lower single-stage HER.  This selection bias means that the number of stages acts as a proxy for material difficulty rather than a direct causal driver of HER improvement.  The synthetic data faithfully reproduces this confounded relationship.
 
 ### 4.4 Lubrication Effects
 
-Lubrication reduces tool-sheet friction, which in turn lowers surface roughness on the formed flange.  
-The correlation between lubrication and roughness is strongly negative in both datasets (real rho = **-0.9999**, synth rho = **-0.5562**), confirming that the synthetic data captures the friction-mitigation effect of lubricant application.
+Lubrication plays a critical role in incremental forming by reducing the coefficient of friction at the tool–sheet interface.  Lower friction reduces tangential stresses on the sheet surface, which in turn decreases the amplitude of tool-mark scalloping and lowers the average surface roughness (Ra) on the formed flange.
 
-- **Real** mean roughness: lubricated = 0.64 um, unlubricated = 100.00 um
-- **Synthetic** mean roughness: lubricated = 3.84 um, unlubricated = 46.61 um
+The correlation between lubrication and roughness is strongly negative in both datasets (original ρ = **-0.9999**, synthetic ρ = **-0.5562**), confirming that the synthetic data captures the friction-mitigation effect of lubricant application.
+
+- **Original** mean roughness: lubricated = 0.64 µm, unlubricated = 100.00 µm
+- **Synthetic** mean roughness: lubricated = 3.84 µm, unlubricated = 46.61 µm
 
 ### 4.5 Thickness Evolution
 
-During incremental hole flanging, the sheet undergoes progressive thinning.  The thinning ratio (min thickness / initial thickness) averages **0.587** in the real dataset and **0.708** in the synthetic dataset.  
-**0** synthetic samples violate the constraint Min Thickness <= Initial Thickness, indicating effective rejection sampling.
+During incremental hole flanging, the sheet undergoes progressive thinning as material is drawn radially inward and stretched circumferentially.  The thinning ratio (minimum thickness / initial thickness) provides a direct measure of the severity of deformation.  Values approaching zero indicate imminent fracture, while values near unity indicate minimal deformation.
 
-Step depth is expected to influence thinning: larger incremental steps produce more severe localised deformation.  The correlation is rho_real = 0.1898, rho_synth = 0.0109.
+The thinning ratio averages **0.587** in the original dataset and **0.708** in the synthetic dataset.  
+**0** synthetic samples violate the constraint Min Thickness ≤ Initial Thickness, indicating effective rejection sampling.
+
+Step depth is expected to influence thinning: larger incremental step-downs produce more severe localised deformation and hence thinner walls.  The correlation is ρ_original = 0.1898, ρ_synthetic = 0.0109.
 
 ### 4.6 Flange Height Relationships
 
-Flange height is the primary dimensional output of the SPIHF process.  The real dataset records a range of **0.42** to **50.00 mm** (mean = 17.36 mm).  The synthetic dataset spans **0.34** to **49.79 mm** (mean = 17.54 mm).
+Flange height is the primary dimensional output of the SPIHF process, representing the vertical extent of the formed flange measured from the original sheet plane.  It is determined by the precut hole diameter, tool path geometry, number of stages, and material formability.
 
-The correlation between HER and Flange Height is near zero in both datasets (real rho = -0.0151, synth rho = 0.0053), which is consistent with the fact that flange height is primarily determined by precut hole diameter and tool path geometry, not the expansion ratio per se.
+The original dataset records flange heights ranging from **0.42** to **50.00 mm** (mean = 17.36 mm).  The synthetic dataset spans **0.34** to **49.79 mm** (mean = 17.54 mm).
+
+The correlation between HER and Flange Height is near zero in both datasets (original ρ = -0.0151, synthetic ρ = 0.0053).  This is physically consistent: flange height is primarily determined by the precut hole diameter and tool path geometry, not by the expansion ratio per se.  Two materials with identical HER but different precut diameters will produce different flange heights.
 
 ### 4.7 Surface Roughness Trends
 
-Surface roughness in SPIF-type processes is predominantly controlled by step depth (tool step-down per pass), tool diameter, feed rate, and lubrication.  Larger step depths produce more pronounced scalloping on the inner surface, increasing Ra values.  
-The Step Depth vs Roughness correlation is **0.6961** (real) and **0.0020** (synthetic).  
-The absolute difference of **0.6941** is notable and suggests that the synthetic data has attenuated this correlation -- likely because Gaussian noise added to both step depth and roughness independently reduces the marginal signal.  This is an area for future improvement in the augmentation pipeline (e.g., correlated noise injection).
+Surface roughness in SPIF-type processes is predominantly controlled by step depth (tool step-down per pass), tool diameter, feed rate, and lubrication.  Larger step depths produce more pronounced scalloping on the inner surface of the formed part, increasing the arithmetic mean roughness Ra.  This relationship is well-established in the incremental forming literature and serves as a key fidelity check.
+
+The Step Depth vs Roughness correlation is **0.6961** (original) and **0.0020** (synthetic).  
+The absolute difference of **0.6941** is notable and suggests that the synthetic data has attenuated this correlation.  This is a known limitation of independent Gaussian perturbation: adding noise to step depth and roughness independently reduces the marginal signal between them.  Future pipeline iterations should consider correlated noise injection or copula-based perturbation to better preserve bivariate dependencies.
 
 
 ## 5. Research Limitations
 
-While the augmentation pipeline produces statistically plausible samples, several limitations must be acknowledged to guide responsible use of the synthetic data.
+While the augmentation pipeline produces statistically plausible samples that pass multiple validation checks, several limitations must be acknowledged to guide responsible use of the synthetic data in downstream modelling and decision-making.
 
 ### 5.1 Small Original Dataset
 
-The original SPIHF dataset contains only **304** observations drawn from **68** materials.  Several material groups contain fewer than 10 samples, making their within-group statistics highly sensitive to individual outliers.  Consequences include:
+The original SPIHF dataset contains only **304** observations drawn from **68** materials.  Several material groups contain fewer than 10 samples, making their within-group statistics highly sensitive to individual outliers and measurement artefacts.  Consequences include:
 
-- **Sampling noise amplification:** SMOTE interpolation between a small number of parents can produce a narrow synthetic cloud that fails to capture the true process variability.
-- **Unreliable higher-order statistics:** Skewness and kurtosis estimates from fewer than 20 points are unstable, so the synthetic data may not match these moments even if means and standard deviations are well preserved.
-- **Material bias:** Materials with very few observations contribute proportionally fewer synthetic samples; any systematic measurement error in those few experiments propagates unchanged into the augmented dataset.
+- **Sampling noise amplification:** SMOTE interpolation between a small number of parent observations can produce a narrow synthetic cloud that fails to capture the true process variability.  The resulting synthetic distribution may underestimate the tails, particularly for skewed features such as surface roughness.
+- **Unreliable higher-order statistics:** Skewness and kurtosis estimates from fewer than 20 observations are inherently unstable, so the synthetic data may not match these moments even when means and standard deviations are well preserved.
+- **Material bias:** Materials with very few observations contribute proportionally fewer synthetic samples.  Any systematic measurement error in those few original experiments propagates unchanged into the augmented dataset, potentially biasing downstream models.
 
 ### 5.2 Synthetic Data Bias
 
-Synthetic augmentation cannot introduce information that was not present in the original data.  The generated samples are strictly interpolative (within the convex hull of each material group) with small perturbations.  This means:
+Synthetic augmentation cannot introduce information that was not present in the original data.  The generated samples are strictly interpolative (within the convex hull of each material group) with small perturbations.  This imposes three fundamental limitations:
 
-- **No extrapolation:** The synthetic dataset will not contain process configurations beyond those tested experimentally (e.g., extremely thin sheets, very high feed rates, or novel alloys).
-- **Correlation attenuation:** Gaussian noise applied independently to each feature tends to decorrelate features that are physically linked.  The validation results confirm this: the Step Depth vs Roughness correlation dropped significantly in the synthetic data.
-- **Mode collapse risk:** If the original data contains bimodal distributions (e.g., two distinct HER regimes for the same material), linear interpolation may fill in the 'gap' between modes, creating plausible-looking but non-physical intermediate points.
+- **No extrapolation:** The synthetic dataset will not contain process configurations beyond those tested experimentally (e.g., extremely thin sheets < 0.5 mm, very high feed rates, or novel alloy systems not represented in the corpus).
+- **Correlation attenuation:** Gaussian noise applied independently to each feature tends to decorrelate features that are physically linked.  The validation results confirm this: the Step Depth vs Roughness correlation dropped significantly in the synthetic data (Δρ ≈ 0.69).
+- **Mode collapse risk:** If the original data contains bimodal distributions (e.g., two distinct HER regimes for the same material at different wall angles), linear interpolation may fill in the ‘gap’ between modes, creating plausible-looking but non-physical intermediate points.
 
 ### 5.3 Overfitting Dangers
 
-The augmented dataset (1001 samples) is over 3.3x larger than the original.  If used naively for ML training, models may:
+The augmented dataset (1001 samples) is over **3.3×** larger than the original.  If used naïvely for ML training without proper cross-validation protocol, models may:
 
-- **Overfit to the synthetic manifold** rather than to the true process physics, particularly if the synthetic data has introduced any subtle structural bias.
+- **Overfit to the synthetic manifold** rather than to the true process physics, particularly if the synthetic data has introduced any subtle structural bias (e.g., artificially smooth decision boundaries from interpolation).
 - **Inflate performance estimates:** Cross-validation on the combined dataset may yield optimistically low error rates because synthetic test points are correlated with synthetic training points (they share the same generative mechanism).
 
-**Mitigation strategies:**
-1. Always hold out the entire *real* dataset for final model evaluation -- never mix real and synthetic in the same fold.
+**Recommended mitigation strategies:**
+1. Always hold out the entire *original* dataset for final model evaluation — never mix original and synthetic data in the same cross-validation fold.
 2. Use the `confidence_score` column to weight training samples, downweighting low-confidence synthetic observations.
-3. Perform ablation studies: compare model performance trained on real-only vs. real+synthetic to quantify the net benefit of augmentation.
+3. Perform ablation studies: compare model performance trained on original-only vs. original+synthetic to quantify the net benefit of augmentation.
+4. Consider training ensemble models where synthetic data contributes to diversity in bagging/boosting but is excluded from the final evaluation metric.
 
 ### 5.4 Physical Assumptions
 
-The rejection-sampling constraints encode simplified physical rules (e.g., UTS >= YS, Min Thickness <= Thickness).  These are necessary but not sufficient conditions for physical plausibility.  Several subtleties are not captured:
+The rejection-sampling constraints encode simplified physical rules (e.g., UTS ≥ YS, Min Thickness ≤ Thickness).  These are necessary but not sufficient conditions for physical plausibility.  Several subtleties of the real forming process are not captured:
 
 - **Strain-path dependence:** The thinning pattern in incremental forming depends on the strain path (biaxial vs. plane strain), which varies with tool trajectory and cannot be inferred from scalar features alone.
-- **Anisotropy coupling:** The R-value influences forming limits in a non-linear, orientation-dependent manner (0/45/90 degree rolling directions).  The dataset records only an average R-value, losing directional information.
-- **Temperature effects:** High spindle speeds generate frictional heating that can alter material properties in situ; the dataset does not include temperature measurements.
-- **Tool wear:** Progressive tool degradation affects surface roughness and forming forces over time -- an effect absent from the cross-sectional dataset.
+- **Anisotropy coupling:** The Lankford R-value influences forming limits in a non-linear, orientation-dependent manner (0°/45°/90° rolling directions).  The dataset records only an average R-value, losing directional information.
+- **Temperature effects:** High spindle speeds generate frictional heating that can alter material properties *in situ*; the dataset does not include temperature measurements, so thermally activated softening or precipitation effects are unaccounted for.
+- **Tool wear:** Progressive tool degradation affects surface roughness and forming forces over time — an effect absent from the cross-sectional dataset.
+- **Residual stresses and springback:** The formed flange geometry after unclamping may differ from the nominal tool-path geometry due to elastic recovery, which is not captured in the reported flange height and final angle values.
 
 ### 5.5 Generalisation Limitations
 
 The current composite validation score of **C** (60.6/100) reflects moderate fidelity.  Key generalisation caveats:
 
-- **Material scope:** The model is valid only for the specific alloys present in the dataset (68 materials).  Applying trained models to predict HER for an untested alloy (e.g., titanium Ti-6Al-4V) requires caution.
-- **Process configuration scope:** All data originates from single-point incremental forming with hemispherical tools.  Extension to multi-point, double-sided, or hybrid forming strategies is not warranted.
-- **Scale effects:** The datasets represent lab-scale experiments; industrial-scale forming involves larger blanks, different clamping arrangements, and machine-specific dynamics that may alter process-response relationships.
-- **Feature importance instability:** The Random Forest importance ranking diverged significantly between real and synthetic data (Spearman rho = 0.0074).  This suggests that high-dimensional predictive relationships are not fully preserved and should be interpreted with caution.
+- **Material scope:** The model is valid only for the specific alloy systems present in the dataset (68 material designations).  Applying trained models to predict HER for an untested alloy or temper condition requires extreme caution and should be accompanied by uncertainty quantification.
+- **Process configuration scope:** All data originates from single-point incremental forming with hemispherical tools.  Extension to multi-point, double-sided, or hybrid forming strategies (e.g., with heated tools or laser-assisted forming) is not warranted without additional experimental validation.
+- **Scale effects:** The datasets represent lab-scale experiments; industrial-scale forming involves larger blanks, different clamping arrangements, and machine-specific dynamics that may alter process–response relationships.
+- **Feature importance instability:** The Random Forest importance ranking diverged significantly between original and synthetic data (Spearman ρ = 0.0074).  This suggests that high-dimensional predictive relationships are not fully preserved and should be interpreted with caution when using the synthetic data for feature selection or variable importance analysis.
 

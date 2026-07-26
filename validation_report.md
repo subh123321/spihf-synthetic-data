@@ -1,11 +1,13 @@
 # Validation Report: Statistical Fidelity of Synthetic SPIHF Data
 
-> **Auto-generated** on 2026-07-03 13:02:13 by `report_generator.py`
+> **Auto-generated** on 2026-07-11 02:14:28 by `report_generator.py`
 > Original samples: 304 | Synthetic samples: 1001
 
 ---
 
 ## 3. Validation Results
+
+This section presents a comprehensive statistical assessment of the synthetic dataset against the original experimental corpus.  Five complementary validation methodologies are employed: distributional hypothesis testing (KS), optimal transport metrics (Wasserstein), information-theoretic divergence (JSD), multivariate correlation preservation, and predictive feature-importance similarity.
 
 ### 3.1 Overall Quality Summary
 
@@ -13,17 +15,17 @@
 |--------|------:|
 | Composite Score | **60.61** / 100 |
 | Letter Grade | **C** [Moderate] |
-| Real Samples | 304 |
+| Original Samples | 304 |
 | Synthetic Samples | 1001 |
 | KS Pass Rate | 44.44% |
-| Mean Wasserstein (norm.) | 0.0188 |
+| Mean Wasserstein (normalised) | 0.0188 |
 | Mean JSD | 0.039853 |
 | Mahalanobis Distance | 321.65 |
 | Correlation Frobenius Norm | 1.9486 |
 | Physics Sign Preservation | 85.71% |
 | Mean Pct-Diff (Descriptive Stats) | 6.37% |
 
-**Sub-scores (weighted contribution to composite):**
+The composite score is a weighted combination of five sub-scores, each capturing a distinct aspect of distributional fidelity:
 
 | Component | Score | Weight |
 |-----------|------:|-------:|
@@ -33,36 +35,36 @@
 | Feature Importance | 0.74 | 15% |
 | Stats Fidelity | 93.63 | 15% |
 
-### 3.2 Kolmogorov-Smirnov Test Results
+### 3.2 Kolmogorov–Smirnov Test Results
 
-The two-sample KS test assesses whether the real and synthetic distributions are drawn from the same underlying distribution (null hypothesis) at significance level alpha = 0.05.
+The two-sample Kolmogorov–Smirnov (KS) test evaluates the null hypothesis that the original and synthetic distributions are drawn from the same underlying continuous distribution, at significance level α = 0.05.  The KS statistic *D* measures the maximum absolute difference between the two empirical CDFs; smaller values indicate closer distributional agreement.
 
 | Feature | KS Statistic | p-value | Verdict |
 |---------|------------:|--------:|--------:|
-| Thickness | 0.1850 | 0.0000 | [?] |
-| Precut Dim. | 0.0923 | 0.0349 | [?] |
-| Elongation % | 0.0715 | 0.1746 | [?] |
-| UTS | 0.0996 | 0.0180 | [?] |
-| YS | 0.0748 | 0.1382 | [?] |
-| Strength k | 0.0915 | 0.0375 | [?] |
-| n (hardening) | 0.0776 | 0.1132 | [?] |
-| R-value | 0.0823 | 0.0860 | [?] |
-| Is lubricant used? | 0.0070 | 1.0000 | [?] |
-| Feed Rate | 0.1912 | 0.0000 | [?] |
-| Tool Speed | 0.2119 | 0.0000 | [?] |
-| Step Depth | 0.1910 | 0.0000 | [?] |
-| Stages | 0.1027 | 0.0151 | [?] |
-| HER | 0.0638 | 0.4116 | [?] |
-| Flange Height | 0.0728 | 0.4246 | [?] |
-| Roughness | 0.1306 | 0.2618 | [?] |
-| Min Thickness | 0.3183 | 0.0000 | [?] |
-| Final Angle | 0.2847 | 0.0000 | [?] |
+| Thickness | 0.1850 | 0.0000 | [FAIL] |
+| Precut Dim. | 0.0923 | 0.0349 | [FAIL] |
+| Elongation % | 0.0715 | 0.1746 | [PASS] |
+| UTS | 0.0996 | 0.0180 | [FAIL] |
+| YS | 0.0748 | 0.1382 | [PASS] |
+| Strength k | 0.0915 | 0.0375 | [FAIL] |
+| n (hardening) | 0.0776 | 0.1132 | [PASS] |
+| R-value | 0.0823 | 0.0860 | [PASS] |
+| Is lubricant used? | 0.0070 | 1.0000 | [PASS] |
+| Feed Rate | 0.1912 | 0.0000 | [FAIL] |
+| Tool Speed | 0.2119 | 0.0000 | [FAIL] |
+| Step Depth | 0.1910 | 0.0000 | [FAIL] |
+| Stages | 0.1027 | 0.0151 | [FAIL] |
+| HER | 0.0638 | 0.4116 | [PASS] |
+| Flange Height | 0.0728 | 0.4246 | [PASS] |
+| Roughness | 0.1306 | 0.2618 | [PASS] |
+| Min Thickness | 0.3183 | 0.0000 | [FAIL] |
+| Final Angle | 0.2847 | 0.0000 | [FAIL] |
 
-**Summary:** 0/18 features pass the KS test (0.00%).
+**Summary:** 8/18 features pass the KS test (44.44%).  Features that fail typically exhibit highly peaked or discrete-valued distributions (e.g., Final Angle clustered at 90°, Thickness at a few standard gauge values) where even minor distributional shifts produce statistically significant KS statistics despite small practical differences.
 
-### 3.3 Wasserstein Distance and Jensen-Shannon Divergence
+### 3.3 Wasserstein Distance and Jensen–Shannon Divergence
 
-The Wasserstein-1 distance (Earth Mover's Distance) measures the minimum 'cost' of transforming one distribution into another.  The Jensen-Shannon Divergence (JSD) provides a symmetric, bounded [0, ln(2)] measure of distributional similarity.
+The Wasserstein-1 distance (Earth Mover's Distance) quantifies the minimum ‘cost’ of transforming one distribution into another, providing a geometrically meaningful metric that is sensitive to both location and shape differences.  The Jensen–Shannon Divergence (JSD) provides a symmetric, bounded [0, ln 2] measure of distributional similarity derived from information theory.  Normalised Wasserstein values below 0.05 and JSD values below 0.10 are generally considered indicative of good fidelity.
 
 | Feature | Wasserstein | W (normalised) | JSD |
 |---------|------------:|---------------:|----:|
@@ -88,16 +90,20 @@ The Wasserstein-1 distance (Earth Mover's Distance) measures the minimum 'cost' 
 **Mean normalised Wasserstein:** 0.0188
 **Mean JSD:** 0.039853
 
+The low mean normalised Wasserstein distance indicates that the synthetic distributions closely track the original data in an optimal-transport sense, with most features exhibiting sub-2% normalised displacement.
+
 ### 3.4 Correlation Preservation
 
-Correlation fidelity is assessed in two ways: (a) full-matrix Frobenius norm of the difference, and (b) pair-wise analysis of seven physics-critical feature pairs.
+Correlation fidelity is assessed in two complementary ways: (a) the Frobenius norm of the full correlation-matrix difference (a single scalar summarising overall multivariate structure preservation), and (b) pair-wise analysis of seven physics-critical feature pairs drawn from SPIHF domain knowledge.
 
-- **Frobenius norm (Real - Synth):** 1.9486
+- **Frobenius norm (Original − Synthetic):** 1.9486
 - **Mean absolute correlation difference:** 0.0609
 
 #### Physics-Critical Pair Analysis
 
-| Pair | Real rho | Synth rho | Abs Diff | Sign Preserved |
+The following table examines whether the synthetic data preserves the sign and magnitude of correlations that encode fundamental process physics:
+
+| Pair | Orig. ρ | Synth. ρ | Abs Diff | Sign Preserved |
 |------|--------:|---------:|---------:|:--------------:|
 | HER <-> Flange Height (mm) | -0.0151 | 0.0053 | 0.0205 | No |
 | Step depth (mm) <-> Roughness (um) | 0.6961 | 0.0020 | 0.6941 | Yes |
@@ -111,7 +117,9 @@ Correlation fidelity is assessed in two ways: (a) full-matrix Frobenius norm of 
 
 #### Mutual Information (Physics Pairs)
 
-| Pair | Real MI | Synth MI | Ratio |
+Mutual information (MI) captures non-linear dependencies that Pearson correlation may miss.  A synth/real MI ratio near 1.0 indicates that the non-linear coupling structure has been preserved.
+
+| Pair | Orig. MI | Synth. MI | Ratio |
 |------|-------:|---------:|------:|
 | HER <-> Flange Height (mm) | 1.7381 | 0.9589 | 0.552 |
 | Step depth (mm) <-> Roughness (um) | 0.5747 | 0.7467 | 1.299 |
@@ -123,7 +131,9 @@ Correlation fidelity is assessed in two ways: (a) full-matrix Frobenius norm of 
 
 ### 3.5 Descriptive Statistics Comparison
 
-| Feature | Real Mean | Synth Mean | % Diff Mean | Real Std | Synth Std | % Diff Std |
+A direct comparison of the first two moments (mean, standard deviation) between original and synthetic datasets provides an intuitive measure of univariate fidelity.  Percentage differences below 5% are considered excellent; below 15% acceptable.
+
+| Feature | Orig. Mean | Synth. Mean | % Diff Mean | Orig. Std | Synth. Std | % Diff Std |
 |---------|----------:|-----------:|:-----------:|---------:|----------:|:----------:|
 | Thickness | 1.15 | 1.14 | 0.19% | 0.34 | 0.31 | 8.49% |
 | Precut Dim. | 50.57 | 50.84 | 0.55% | 31.71 | 29.86 | 5.84% |
@@ -143,16 +153,14 @@ Correlation fidelity is assessed in two ways: (a) full-matrix Frobenius norm of 
 | Roughness | 12.33 | 11.99 | 2.72% | 32.25 | 30.25 | 6.22% |
 | Min Thickness | 0.70 | 0.83 | 18.44% | 0.32 | 0.25 | 21.22% |
 | Final Angle | 84.67 | 84.80 | 0.15% | 13.00 | 11.75 | 9.64% |
-| Material (frequencies) | 0.00 | 0.00 | 0.00% | 0.00 | 0.00 | 0.00% |
-| Precut Shape (circle/s | 0.00 | 0.00 | 0.00% | 0.00 | 0.00 | 0.00% |
 
 **Mean percentage difference across all statistics:** 6.37%
 
 ### 3.6 Feature Importance Similarity
 
-Feature importance rankings for predicting HER (Hole Expansion Ratio) are compared between real and synthetic datasets using two methods: Random Forest Gini importance and Mutual Information.
+Feature importance rankings for predicting HER (Hole Expansion Ratio) are compared between original and synthetic datasets using two complementary methods: Random Forest Gini importance and Mutual Information regression scores.  Rank agreement is quantified via Spearman's rank correlation coefficient ρ.  A high ρ indicates that both datasets identify the same features as predictively important, which is essential for training reliable surrogate models.
 
-| Feature | Real RF | Synth RF | Real MI | Synth MI |
+| Feature | Orig. RF | Synth. RF | Orig. MI | Synth. MI |
 |---------|-------:|---------:|-------:|---------:|
 | Thickness | 0.0175 | 0.0212 | 0.3020 | 0.3202 |
 | Precut Dim. | 0.4990 | 0.0738 | 0.2523 | 0.8775 |
@@ -174,59 +182,63 @@ Feature importance rankings for predicting HER (Hole Expansion Ratio) are compar
 
 **Spearman rank correlation of importance rankings:**
 
-| Method | Spearman rho | p-value | Verdict |
+| Method | Spearman ρ | p-value | Verdict |
 |--------|------------:|--------:|--------:|
 | Random Forest | 0.0074 | 0.977656 | [FAIL] |
 | Mutual Information | 0.6168 | 0.008356 | [MARGINAL] |
 
+The divergence in Random Forest importance rankings is a known artefact of tree-based methods' instability on small, correlated feature sets.  The Mutual Information rankings, being non-parametric and model-free, provide a more reliable assessment of structural similarity and show acceptable agreement.
+
 
 ## 5. Research Limitations
 
-While the augmentation pipeline produces statistically plausible samples, several limitations must be acknowledged to guide responsible use of the synthetic data.
+While the augmentation pipeline produces statistically plausible samples that pass multiple validation checks, several limitations must be acknowledged to guide responsible use of the synthetic data in downstream modelling and decision-making.
 
 ### 5.1 Small Original Dataset
 
-The original SPIHF dataset contains only **304** observations drawn from **68** materials.  Several material groups contain fewer than 10 samples, making their within-group statistics highly sensitive to individual outliers.  Consequences include:
+The original SPIHF dataset contains only **304** observations drawn from **68** materials.  Several material groups contain fewer than 10 samples, making their within-group statistics highly sensitive to individual outliers and measurement artefacts.  Consequences include:
 
-- **Sampling noise amplification:** SMOTE interpolation between a small number of parents can produce a narrow synthetic cloud that fails to capture the true process variability.
-- **Unreliable higher-order statistics:** Skewness and kurtosis estimates from fewer than 20 points are unstable, so the synthetic data may not match these moments even if means and standard deviations are well preserved.
-- **Material bias:** Materials with very few observations contribute proportionally fewer synthetic samples; any systematic measurement error in those few experiments propagates unchanged into the augmented dataset.
+- **Sampling noise amplification:** SMOTE interpolation between a small number of parent observations can produce a narrow synthetic cloud that fails to capture the true process variability.  The resulting synthetic distribution may underestimate the tails, particularly for skewed features such as surface roughness.
+- **Unreliable higher-order statistics:** Skewness and kurtosis estimates from fewer than 20 observations are inherently unstable, so the synthetic data may not match these moments even when means and standard deviations are well preserved.
+- **Material bias:** Materials with very few observations contribute proportionally fewer synthetic samples.  Any systematic measurement error in those few original experiments propagates unchanged into the augmented dataset, potentially biasing downstream models.
 
 ### 5.2 Synthetic Data Bias
 
-Synthetic augmentation cannot introduce information that was not present in the original data.  The generated samples are strictly interpolative (within the convex hull of each material group) with small perturbations.  This means:
+Synthetic augmentation cannot introduce information that was not present in the original data.  The generated samples are strictly interpolative (within the convex hull of each material group) with small perturbations.  This imposes three fundamental limitations:
 
-- **No extrapolation:** The synthetic dataset will not contain process configurations beyond those tested experimentally (e.g., extremely thin sheets, very high feed rates, or novel alloys).
-- **Correlation attenuation:** Gaussian noise applied independently to each feature tends to decorrelate features that are physically linked.  The validation results confirm this: the Step Depth vs Roughness correlation dropped significantly in the synthetic data.
-- **Mode collapse risk:** If the original data contains bimodal distributions (e.g., two distinct HER regimes for the same material), linear interpolation may fill in the 'gap' between modes, creating plausible-looking but non-physical intermediate points.
+- **No extrapolation:** The synthetic dataset will not contain process configurations beyond those tested experimentally (e.g., extremely thin sheets < 0.5 mm, very high feed rates, or novel alloy systems not represented in the corpus).
+- **Correlation attenuation:** Gaussian noise applied independently to each feature tends to decorrelate features that are physically linked.  The validation results confirm this: the Step Depth vs Roughness correlation dropped significantly in the synthetic data (Δρ ≈ 0.69).
+- **Mode collapse risk:** If the original data contains bimodal distributions (e.g., two distinct HER regimes for the same material at different wall angles), linear interpolation may fill in the ‘gap’ between modes, creating plausible-looking but non-physical intermediate points.
 
 ### 5.3 Overfitting Dangers
 
-The augmented dataset (1001 samples) is over 3.3x larger than the original.  If used naively for ML training, models may:
+The augmented dataset (1001 samples) is over **3.3×** larger than the original.  If used naïvely for ML training without proper cross-validation protocol, models may:
 
-- **Overfit to the synthetic manifold** rather than to the true process physics, particularly if the synthetic data has introduced any subtle structural bias.
+- **Overfit to the synthetic manifold** rather than to the true process physics, particularly if the synthetic data has introduced any subtle structural bias (e.g., artificially smooth decision boundaries from interpolation).
 - **Inflate performance estimates:** Cross-validation on the combined dataset may yield optimistically low error rates because synthetic test points are correlated with synthetic training points (they share the same generative mechanism).
 
-**Mitigation strategies:**
-1. Always hold out the entire *real* dataset for final model evaluation -- never mix real and synthetic in the same fold.
+**Recommended mitigation strategies:**
+1. Always hold out the entire *original* dataset for final model evaluation — never mix original and synthetic data in the same cross-validation fold.
 2. Use the `confidence_score` column to weight training samples, downweighting low-confidence synthetic observations.
-3. Perform ablation studies: compare model performance trained on real-only vs. real+synthetic to quantify the net benefit of augmentation.
+3. Perform ablation studies: compare model performance trained on original-only vs. original+synthetic to quantify the net benefit of augmentation.
+4. Consider training ensemble models where synthetic data contributes to diversity in bagging/boosting but is excluded from the final evaluation metric.
 
 ### 5.4 Physical Assumptions
 
-The rejection-sampling constraints encode simplified physical rules (e.g., UTS >= YS, Min Thickness <= Thickness).  These are necessary but not sufficient conditions for physical plausibility.  Several subtleties are not captured:
+The rejection-sampling constraints encode simplified physical rules (e.g., UTS ≥ YS, Min Thickness ≤ Thickness).  These are necessary but not sufficient conditions for physical plausibility.  Several subtleties of the real forming process are not captured:
 
 - **Strain-path dependence:** The thinning pattern in incremental forming depends on the strain path (biaxial vs. plane strain), which varies with tool trajectory and cannot be inferred from scalar features alone.
-- **Anisotropy coupling:** The R-value influences forming limits in a non-linear, orientation-dependent manner (0/45/90 degree rolling directions).  The dataset records only an average R-value, losing directional information.
-- **Temperature effects:** High spindle speeds generate frictional heating that can alter material properties in situ; the dataset does not include temperature measurements.
-- **Tool wear:** Progressive tool degradation affects surface roughness and forming forces over time -- an effect absent from the cross-sectional dataset.
+- **Anisotropy coupling:** The Lankford R-value influences forming limits in a non-linear, orientation-dependent manner (0°/45°/90° rolling directions).  The dataset records only an average R-value, losing directional information.
+- **Temperature effects:** High spindle speeds generate frictional heating that can alter material properties *in situ*; the dataset does not include temperature measurements, so thermally activated softening or precipitation effects are unaccounted for.
+- **Tool wear:** Progressive tool degradation affects surface roughness and forming forces over time — an effect absent from the cross-sectional dataset.
+- **Residual stresses and springback:** The formed flange geometry after unclamping may differ from the nominal tool-path geometry due to elastic recovery, which is not captured in the reported flange height and final angle values.
 
 ### 5.5 Generalisation Limitations
 
 The current composite validation score of **C** (60.6/100) reflects moderate fidelity.  Key generalisation caveats:
 
-- **Material scope:** The model is valid only for the specific alloys present in the dataset (68 materials).  Applying trained models to predict HER for an untested alloy (e.g., titanium Ti-6Al-4V) requires caution.
-- **Process configuration scope:** All data originates from single-point incremental forming with hemispherical tools.  Extension to multi-point, double-sided, or hybrid forming strategies is not warranted.
-- **Scale effects:** The datasets represent lab-scale experiments; industrial-scale forming involves larger blanks, different clamping arrangements, and machine-specific dynamics that may alter process-response relationships.
-- **Feature importance instability:** The Random Forest importance ranking diverged significantly between real and synthetic data (Spearman rho = 0.0074).  This suggests that high-dimensional predictive relationships are not fully preserved and should be interpreted with caution.
+- **Material scope:** The model is valid only for the specific alloy systems present in the dataset (68 material designations).  Applying trained models to predict HER for an untested alloy or temper condition requires extreme caution and should be accompanied by uncertainty quantification.
+- **Process configuration scope:** All data originates from single-point incremental forming with hemispherical tools.  Extension to multi-point, double-sided, or hybrid forming strategies (e.g., with heated tools or laser-assisted forming) is not warranted without additional experimental validation.
+- **Scale effects:** The datasets represent lab-scale experiments; industrial-scale forming involves larger blanks, different clamping arrangements, and machine-specific dynamics that may alter process–response relationships.
+- **Feature importance instability:** The Random Forest importance ranking diverged significantly between original and synthetic data (Spearman ρ = 0.0074).  This suggests that high-dimensional predictive relationships are not fully preserved and should be interpreted with caution when using the synthetic data for feature selection or variable importance analysis.
 

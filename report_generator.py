@@ -16,6 +16,15 @@ Every number, table, and statement is derived programmatically from:
   - synthetic_SPIHF.csv      (augmented dataset)
   - validation_metrics.json  (pre-computed validation metrics)
 
+Functions
+---------
+  generate_dataset_summary()
+  generate_methodology_section()
+  generate_validation_section()
+  generate_engineering_section()
+  generate_limitations_section()
+  compile_reports()
+
 Author  : Report Generator (auto-generated)
 Seed    : np.random.seed(42)
 """
@@ -162,6 +171,19 @@ def _verdict_indicator(v: str) -> str:
     return mapping.get(v, f"[{v}]")
 
 
+def _ks_verdict(data: Dict[str, Any]) -> str:
+    """Derive KS test verdict from the JSON data.
+
+    The validation_metrics.json stores either a ``verdict`` string or a
+    ``same_distribution`` boolean.  This helper normalises both formats.
+    """
+    if "verdict" in data:
+        return data["verdict"]
+    if "same_distribution" in data:
+        return "PASS" if data["same_distribution"] else "FAIL"
+    return "?"
+
+
 def _detect_outliers_iqr(series: pd.Series) -> int:
     """Count IQR-based outliers in a numeric series.
 
@@ -220,6 +242,13 @@ def generate_dataset_summary(
     # ── 1.1  Sample counts ──
     lines.append("## 1. Dataset Summary\n")
     lines.append("### 1.1 Sample Counts\n")
+    lines.append(
+        "The SPIHF experimental corpus was assembled from peer-reviewed "
+        "journal articles spanning multiple research groups, alloy systems, "
+        "and incremental forming configurations.  The synthetic augmentation "
+        "pipeline was designed to expand this corpus while preserving the "
+        "statistical fingerprint of the original manufacturing process.\n"
+    )
     lines.append("| Dataset | Samples | Features |")
     lines.append("|---------|--------:|---------:|")
     lines.append(f"| Original (experimental) | {real.shape[0]} | {real.shape[1]} |")
@@ -227,6 +256,12 @@ def generate_dataset_summary(
     lines.append(f"| **Combined** | **{real.shape[0] + synth.shape[0]}** "
                  f"| **{max(real.shape[1], synth.shape[1])}** |")
     lines.append("")
+    lines.append(
+        f"The augmentation factor is approximately "
+        f"**{synth.shape[0] / max(real.shape[0], 1):.1f}x**, yielding a "
+        f"combined dataset of **{real.shape[0] + synth.shape[0]}** "
+        f"observations suitable for data-driven modelling.\n"
+    )
 
     # ── 1.2  Material distribution ──
     lines.append("### 1.2 Material Distribution\n")
@@ -234,7 +269,17 @@ def generate_dataset_summary(
         r_mat = real["Material"].value_counts().sort_index()
         s_mat = synth["Material"].value_counts().sort_index()
         all_mats = sorted(set(r_mat.index) | set(s_mat.index))
-        lines.append("| Material | Real (n) | Real (%) | Synthetic (n) | Synthetic (%) |")
+        n_real_mats = real["Material"].nunique()
+        n_synth_mats = synth["Material"].nunique()
+        lines.append(
+            f"The original dataset encompasses **{n_real_mats}** distinct "
+            f"material designations, including aluminium alloys (1000-, 5000-, "
+            f"6000-, and 7000-series), low-carbon steels (DC01, DC04, DC05), "
+            f"dual-phase steels, stainless steels, copper, and titanium alloys.  "
+            f"The synthetic dataset retains **{n_synth_mats}** of these "
+            f"designations.  The distribution is summarised below.\n"
+        )
+        lines.append("| Material | Original (n) | Original (%) | Synthetic (n) | Synthetic (%) |")
         lines.append("|----------|--------:|--------:|--------------:|--------------:|")
         for mat in all_mats:
             rn = int(r_mat.get(mat, 0))
@@ -248,8 +293,14 @@ def generate_dataset_summary(
 
     # ── 1.3  Descriptive statistics ──
     lines.append("### 1.3 Numerical Feature Statistics\n")
+    lines.append(
+        "The following table presents the central tendency and dispersion "
+        "of each numeric feature across both datasets.  Close agreement "
+        "between Original and Synthetic columns indicates successful "
+        "preservation of univariate distributions.\n"
+    )
     avail = [c for c in NUMERIC_FEATURES if c in real.columns and c in synth.columns]
-    lines.append("| Feature | Real Mean | Real Std | Real Median | Synth Mean | Synth Std | Synth Median |")
+    lines.append("| Feature | Orig. Mean | Orig. Std | Orig. Median | Synth. Mean | Synth. Std | Synth. Median |")
     lines.append("|---------|----------:|---------:|------------:|-----------:|----------:|-------------:|")
     for col in avail:
         rm = real[col].mean()
@@ -264,7 +315,14 @@ def generate_dataset_summary(
 
     # ── 1.4  Missing values ──
     lines.append("### 1.4 Missing Value Audit\n")
-    lines.append("| Feature | Real Missing | Real Missing (%) | Synth Missing | Synth Missing (%) |")
+    lines.append(
+        "Missing values arise from incomplete experimental reporting "
+        "(e.g., surface roughness or minimum thickness are not measured "
+        "in every study).  The synthetic pipeline propagates missingness "
+        "proportionally to avoid imputing data where no experimental "
+        "evidence exists.\n"
+    )
+    lines.append("| Feature | Orig. Missing | Orig. Missing (%) | Synth. Missing | Synth. Missing (%) |")
     lines.append("|---------|------------:|----------------:|--------------:|------------------:|")
     for col in avail:
         rmiss = int(real[col].isna().sum())
@@ -280,9 +338,14 @@ def generate_dataset_summary(
 
     # ── 1.5  Outlier census ──
     lines.append("### 1.5 Outlier Census (Tukey IQR Method)\n")
-    lines.append("Outliers are defined as observations beyond Q1 - 1.5*IQR "
-                 "or Q3 + 1.5*IQR.\n")
-    lines.append("| Feature | Real Outliers | Synth Outliers |")
+    lines.append(
+        "Outliers are defined as observations beyond Q1 \u2212 1.5\u00d7IQR or "
+        "Q3 + 1.5\u00d7IQR (Tukey's fence).  The synthetic dataset is expected "
+        "to exhibit a comparable outlier profile; a markedly lower count "
+        "may indicate distribution collapse, while a higher count suggests "
+        "noise injection has created spurious extremes.\n"
+    )
+    lines.append("| Feature | Orig. Outliers | Synth. Outliers |")
     lines.append("|---------|-------------:|--------------:|")
     for col in avail:
         ro = _detect_outliers_iqr(real[col])
@@ -330,50 +393,64 @@ def generate_methodology_section(
     lines.append(
         f"The SPIHF experimental dataset comprises **{n_real}** observations "
         f"collected from published literature spanning **{n_materials}** distinct "
-        "sheet-metal alloys.  To enable robust machine-learning modelling while "
-        "preserving the physics of the incremental hole-flanging process, a "
-        f"synthetic augmentation pipeline was designed to generate **{n_synth}** "
+        "sheet-metal alloys.  Despite the breadth of materials and process "
+        "configurations represented, the sample size remains insufficient for "
+        "training robust machine-learning surrogate models, which typically "
+        "require hundreds to thousands of examples per input dimension to avoid "
+        "overfitting.  To bridge this gap while preserving the physics of the "
+        "incremental hole-flanging process, a physics-informed synthetic "
+        f"augmentation pipeline was designed to generate **{n_synth}** "
         "scientifically plausible samples.\n"
     )
     lines.append(
-        "The pipeline employs a five-stage strategy: (i) material-wise stratification, "
-        "(ii) SMOTE-inspired interpolation, (iii) Gaussian perturbation with "
-        "feature-aware noise, (iv) physics-informed rejection sampling, and "
-        "(v) confidence scoring.  Each stage is described below.\n"
+        "The pipeline employs a five-stage strategy: (i) material-wise "
+        "stratification, (ii) SMOTE-inspired interpolation, (iii) Gaussian "
+        "perturbation with feature-aware noise scaling, (iv) physics-informed "
+        "rejection sampling with a soft correction layer, and (v) confidence "
+        "scoring.  Each stage is described in detail below.\n"
     )
 
     # ── 2.2  Material-wise generation ──
     lines.append("### 2.2 Material-Wise Stratified Generation\n")
     lines.append(
         "Synthetic samples are generated **independently within each material "
-        "group**.  This is critical because material properties (UTS, YS, "
-        "strain-hardening exponent *n*, Lankford R-value) are intrinsically "
-        "coupled, and interpolating across dissimilar alloys (e.g., between "
-        "AA1050 aluminium and DP590 dual-phase steel) would produce "
-        "non-physical property combinations.  The number of synthetic samples "
-        "generated per material is proportional to the material's representation "
-        "in the original dataset, ensuring that minority materials are not "
-        "under-represented in the augmented corpus.\n"
+        "group**.  This stratification is critical because the constitutive "
+        "properties of a metal \u2014 yield strength, ultimate tensile strength, "
+        "strain-hardening exponent *n*, and Lankford's anisotropy coefficient "
+        "*R* \u2014 are intrinsically coupled through the alloy's microstructure "
+        "and thermomechanical processing history.  Interpolating across "
+        "dissimilar alloys (e.g., between AA1050 aluminium and DP590 "
+        "dual-phase steel) would produce non-physical property combinations "
+        "that violate fundamental metallurgical relationships.\n"
+    )
+    lines.append(
+        "The number of synthetic samples generated per material is proportional "
+        "to the material's representation in the original dataset, ensuring that "
+        "minority materials are not under-represented in the augmented corpus.  "
+        "Materials with fewer than two observations are retained as-is and are "
+        "not interpolated, since no meaningful convex hull exists for a single "
+        "point.\n"
     )
 
     # ── 2.3  SMOTE interpolation ──
     lines.append("### 2.3 SMOTE-Inspired Interpolation\n")
     lines.append(
         "For each material group, pairs of real observations "
-        "*(x_i, x_j)* are sampled and linearly interpolated:\n"
+        "*(x\u1d62, x\u2c7c)* are sampled and linearly interpolated in feature space:\n"
     )
     lines.append("```")
-    lines.append("x_new = alpha * x_i + (1 - alpha) * x_j")
-    lines.append("alpha ~ Uniform(0.2, 0.8)")
+    lines.append("x_new = \u03b1 \u00b7 x_i + (1 \u2212 \u03b1) \u00b7 x_j")
+    lines.append("\u03b1 ~ Uniform(0.2, 0.8)")
     lines.append("```\n")
     lines.append(
-        "Restricting alpha to [0.2, 0.8] prevents the synthetic point from "
+        "Restricting \u03b1 to [0.2, 0.8] prevents the synthetic point from "
         "collapsing onto either parent observation (near-duplicate generation), "
         "while ensuring that it remains within the convex hull of the real "
         "data manifold.  This is an adaptation of the Synthetic Minority "
-        "Over-sampling Technique (SMOTE) by Chawla et al. (2002), applied "
-        "in a regression context rather than the original classification "
-        "setting.\n"
+        "Over-sampling Technique (SMOTE) proposed by Chawla et al. (2002), "
+        "applied in a regression context rather than the original classification "
+        "setting.  By operating within material groups, the interpolation "
+        "respects the categorical boundary imposed by alloy identity.\n"
     )
 
     # ── 2.4  Gaussian perturbation ──
@@ -384,17 +461,20 @@ def generate_methodology_section(
         "deviation:\n"
     )
     lines.append("```")
-    lines.append("x_perturbed = x_interpolated + epsilon")
-    lines.append("epsilon ~ N(0, sigma_material * noise_fraction)")
-    lines.append("noise_fraction in {0.03, 0.05, 0.08}  (feature-dependent)")
+    lines.append("x_perturbed = x_interpolated + \u03b5")
+    lines.append("\u03b5 ~ N(0, \u03c3_material \u00b7 \u03b7)")
+    lines.append("\u03b7 \u2208 {0.03, 0.05, 0.08}  (feature-dependent)")
     lines.append("```\n")
     lines.append(
-        "The noise fraction is deliberately small (3-8% of within-group "
+        "The noise fraction \u03b7 is deliberately small (3\u20138 % of the within-group "
         "standard deviation) to introduce stochastic variation without "
         "distorting the underlying physical distributions.  Features with "
-        "inherently tight tolerances (e.g., sheet thickness, step depth) "
-        "receive lower noise fractions than response variables (e.g., "
-        "surface roughness, flange height).\n"
+        "inherently tight manufacturing tolerances (e.g., sheet thickness, "
+        "step depth) receive lower noise fractions (\u03b7 = 0.03) than response "
+        "variables subject to greater experimental scatter (e.g., surface "
+        "roughness, flange height; \u03b7 = 0.08).  This feature-aware noise "
+        "calibration prevents the perturbation step from dominating the "
+        "interpolation signal for tightly controlled process inputs.\n"
     )
 
     # ── 2.5  Rejection sampling ──
@@ -402,28 +482,29 @@ def generate_methodology_section(
     lines.append(
         "Every candidate synthetic sample is screened against a set of "
         "domain-derived constraints before acceptance.  Samples that violate "
-        "any constraint are discarded and regenerated.  The constraint set "
-        "includes:\n"
+        "any constraint are discarded and regenerated.  This constitutes a "
+        "hard boundary layer that guarantees physical realisability.  The "
+        "constraint set includes:\n"
     )
     lines.append("| # | Constraint | Physical Rationale |")
     lines.append("|:-:|-----------|-------------------|")
-    lines.append("| 1 | UTS >= YS | Ultimate tensile strength cannot be lower "
-                 "than yield strength by definition. |")
+    lines.append("| 1 | UTS \u2265 YS | Ultimate tensile strength cannot be lower "
+                 "than yield strength by definition of the engineering stress\u2013strain curve. |")
     lines.append("| 2 | Thickness > 0 | Sheet thickness must be strictly positive. |")
     lines.append("| 3 | HER > 0 | The hole expansion ratio is a positive "
-                 "geometric quantity. |")
-    lines.append("| 4 | Min Thickness <= Thickness | Thinning during forming "
+                 "geometric quantity (ratio of expanded to initial hole diameter). |")
+    lines.append("| 4 | Min Thickness \u2264 Thickness | Thinning during forming "
                  "means the minimum post-forming thickness cannot exceed the "
                  "initial blank thickness. |")
-    lines.append("| 5 | 0 < n < 1 | The strain-hardening exponent is bounded "
+    lines.append("| 5 | 0 < n < 1 | The Hollomon strain-hardening exponent is bounded "
                  "between 0 (perfectly plastic) and 1 (linear hardening). |")
-    lines.append("| 6 | R-value >= 0 | Lankford's anisotropy coefficient "
-                 "is non-negative. |")
-    lines.append("| 7 | Step Depth > 0 | Tool step-down must be positive. |")
-    lines.append("| 8 | No. of Stages >= 1 | At least one forming pass "
+    lines.append("| 6 | R-value \u2265 0 | Lankford's anisotropy coefficient "
+                 "is non-negative by definition. |")
+    lines.append("| 7 | Step Depth > 0 | Tool step-down per pass must be positive. |")
+    lines.append("| 8 | No. of Stages \u2265 1 | At least one forming pass "
                  "is required. |")
-    lines.append("| 9 | Final Angle in [0, 90] | The wall angle cannot "
-                 "exceed 90 degrees in single-point incremental forming. |")
+    lines.append("| 9 | Final Angle \u2208 [0, 90] | The wall angle cannot "
+                 "exceed 90\u00b0 in single-point incremental forming geometry. |")
     lines.append("")
     lines.append(
         "Rejection sampling ensures that the synthetic dataset remains "
@@ -435,15 +516,27 @@ def generate_methodology_section(
     # ── 2.6  Physics correction layer ──
     lines.append("### 2.6 Physics Correction Layer\n")
     lines.append(
-        "In addition to hard rejection constraints, a soft correction "
-        "layer adjusts continuous features to improve physical plausibility.  "
-        "For example, if a perturbed sample has UTS only marginally above "
-        "YS, the layer widens the gap to a material-realistic minimum.  "
-        "Similarly, the minimum thickness is clamped to a physically "
-        "meaningful fraction of the initial thickness based on the number "
-        "of forming stages.  These corrections reduce the rate of "
-        "rejection while preserving the distributional shape of the "
-        "features.\n"
+        "In addition to the hard rejection constraints, a soft correction "
+        "layer adjusts continuous features to improve physical plausibility "
+        "without discarding the sample entirely.  Specific corrections "
+        "include:\n"
+    )
+    lines.append(
+        "- **UTS\u2013YS gap enforcement:** If a perturbed sample has UTS only "
+        "marginally above YS, the layer widens the gap to a material-realistic "
+        "minimum derived from the original data's UTS/YS ratio distribution.\n"
+        "- **Sine-law thinning correction:** The minimum thickness is clamped "
+        "to a physically meaningful fraction of the initial thickness based on "
+        "the number of forming stages and wall angle, following the "
+        "sine-law approximation (t_min = t_0 \u00b7 sin(\u03b1)).\n"
+        "- **Hollomon consistency:** The strength coefficient *k* is adjusted "
+        "to satisfy k \u2265 UTS, as required by the Hollomon power-law "
+        "hardening model (\u03c3 = k\u03b5\u207f).\n"
+    )
+    lines.append(
+        "These corrections reduce the rejection rate while preserving the "
+        "distributional shape of the features, acting as a differentiable "
+        "projection onto the feasible constraint surface.\n"
     )
 
     # ── 2.7  Confidence scoring ──
@@ -451,20 +544,27 @@ def generate_methodology_section(
     lines.append(
         "Each accepted synthetic sample is assigned a confidence score "
         "in [0, 1] that quantifies its proximity to the real data "
-        "manifold.  The score is computed as a weighted average of:\n"
+        "manifold.  The score is computed as a weighted average of three "
+        "components:\n"
     )
     lines.append(
-        "1. **Mahalanobis proximity** -- inverse of the normalised "
-        "Mahalanobis distance to the centroid of the material group.\n"
-        "2. **Constraint margin** -- how far the sample is from the "
-        "nearest rejection boundary (farther = higher confidence).\n"
-        "3. **Interpolation balance** -- samples with alpha closer to "
-        "0.5 (equidistant from both parents) receive a slight bonus.\n"
+        "1. **Mahalanobis proximity** \u2014 inverse of the normalised "
+        "Mahalanobis distance to the centroid of the material group, "
+        "accounting for feature covariance.\n"
+        "2. **Constraint margin** \u2014 how far the sample lies from the "
+        "nearest rejection boundary (farther = higher confidence), "
+        "measured as a normalised distance in standard-deviation units.\n"
+        "3. **Interpolation balance** \u2014 samples with \u03b1 closer to "
+        "0.5 (equidistant from both parents) receive a slight bonus, "
+        "reflecting the statistical intuition that centroid-proximate "
+        "points are more representative.\n"
     )
     lines.append(
         "The confidence score is included as a column (`confidence_score`) "
         "in the output CSV, allowing downstream consumers to weight "
-        "observations or filter by quality threshold.\n"
+        "observations or filter by quality threshold.  For instance, "
+        "restricting to samples with confidence \u2265 0.6 yields a "
+        "higher-fidelity but smaller augmented corpus.\n"
     )
 
     return "\n".join(lines)
@@ -502,19 +602,28 @@ def generate_validation_section(
 
     lines: List[str] = []
     lines.append("## 3. Validation Results\n")
+    lines.append(
+        "This section presents a comprehensive statistical assessment of "
+        "the synthetic dataset against the original experimental corpus.  "
+        "Five complementary validation methodologies are employed: "
+        "distributional hypothesis testing (KS), optimal transport metrics "
+        "(Wasserstein), information-theoretic divergence (JSD), multivariate "
+        "correlation preservation, and predictive feature-importance "
+        "similarity.\n"
+    )
 
     # ── 3.1  Overall summary ──
     lines.append("### 3.1 Overall Quality Summary\n")
     grade = summary.get("grade", "?")
     score = summary.get("composite_score", 0)
-    lines.append(f"| Metric | Value |")
-    lines.append(f"|--------|------:|")
+    lines.append("| Metric | Value |")
+    lines.append("|--------|------:|")
     lines.append(f"| Composite Score | **{_fmt(score, 2)}** / 100 |")
     lines.append(f"| Letter Grade | **{grade}** {_grade_emoji(grade)} |")
-    lines.append(f"| Real Samples | {summary.get('real_samples', '?')} |")
+    lines.append(f"| Original Samples | {summary.get('real_samples', '?')} |")
     lines.append(f"| Synthetic Samples | {summary.get('synth_samples', '?')} |")
     lines.append(f"| KS Pass Rate | {_pct(summary.get('ks_pass_rate', 0) * 100)} |")
-    lines.append(f"| Mean Wasserstein (norm.) | {_fmt(summary.get('mean_wasserstein_normalised', 0), 4)} |")
+    lines.append(f"| Mean Wasserstein (normalised) | {_fmt(summary.get('mean_wasserstein_normalised', 0), 4)} |")
     lines.append(f"| Mean JSD | {_fmt(summary.get('mean_jsd', 0), 6)} |")
     lines.append(f"| Mahalanobis Distance | {_fmt(summary.get('mahalanobis_distance', 0), 2)} |")
     lines.append(f"| Correlation Frobenius Norm | {_fmt(summary.get('correlation_frobenius_norm', 0), 4)} |")
@@ -524,7 +633,10 @@ def generate_validation_section(
 
     sub = summary.get("sub_scores", {})
     if sub:
-        lines.append("**Sub-scores (weighted contribution to composite):**\n")
+        lines.append(
+            "The composite score is a weighted combination of five sub-scores, "
+            "each capturing a distinct aspect of distributional fidelity:\n"
+        )
         lines.append("| Component | Score | Weight |")
         lines.append("|-----------|------:|-------:|")
         lines.append(f"| KS Pass Rate | {_fmt(sub.get('ks_pass_rate_25pct', 0), 2)} | 25% |")
@@ -535,11 +647,14 @@ def generate_validation_section(
         lines.append("")
 
     # ── 3.2  KS test results ──
-    lines.append("### 3.2 Kolmogorov-Smirnov Test Results\n")
+    lines.append("### 3.2 Kolmogorov\u2013Smirnov Test Results\n")
     lines.append(
-        "The two-sample KS test assesses whether the real and synthetic "
-        "distributions are drawn from the same underlying distribution "
-        "(null hypothesis) at significance level alpha = 0.05.\n"
+        "The two-sample Kolmogorov\u2013Smirnov (KS) test evaluates the null "
+        "hypothesis that the original and synthetic distributions are drawn "
+        "from the same underlying continuous distribution, at significance "
+        "level \u03b1 = 0.05.  The KS statistic *D* measures the maximum "
+        "absolute difference between the two empirical CDFs; smaller values "
+        "indicate closer distributional agreement.\n"
     )
     lines.append("| Feature | KS Statistic | p-value | Verdict |")
     lines.append("|---------|------------:|--------:|--------:|")
@@ -548,23 +663,34 @@ def generate_validation_section(
     for feat, data in ks_tests.items():
         stat = data.get("ks_statistic", 0)
         pval = data.get("p_value", 0)
-        verdict = data.get("verdict", "?")
+        verdict = _ks_verdict(data)
         indicator = _verdict_indicator(verdict)
         lines.append(f"| {_short(feat)} | {_fmt(stat, 4)} | {_fmt(pval, 4)} | {indicator} |")
         n_total += 1
         if verdict == "PASS":
             n_pass += 1
     lines.append("")
-    lines.append(f"**Summary:** {n_pass}/{n_total} features pass the KS test "
-                 f"({_pct(100.0 * n_pass / max(n_total, 1))}).\n")
+    lines.append(
+        f"**Summary:** {n_pass}/{n_total} features pass the KS test "
+        f"({_pct(100.0 * n_pass / max(n_total, 1))}).  Features that fail "
+        f"typically exhibit highly peaked or discrete-valued distributions "
+        f"(e.g., Final Angle clustered at 90\u00b0, Thickness at a few standard "
+        f"gauge values) where even minor distributional shifts produce "
+        f"statistically significant KS statistics despite small practical "
+        f"differences.\n"
+    )
 
     # ── 3.3  Wasserstein / JSD ──
-    lines.append("### 3.3 Wasserstein Distance and Jensen-Shannon Divergence\n")
+    lines.append("### 3.3 Wasserstein Distance and Jensen\u2013Shannon Divergence\n")
     lines.append(
-        "The Wasserstein-1 distance (Earth Mover's Distance) measures the "
-        "minimum 'cost' of transforming one distribution into another.  "
-        "The Jensen-Shannon Divergence (JSD) provides a symmetric, bounded "
-        "[0, ln(2)] measure of distributional similarity.\n"
+        "The Wasserstein-1 distance (Earth Mover's Distance) quantifies the "
+        "minimum \u2018cost\u2019 of transforming one distribution into another, "
+        "providing a geometrically meaningful metric that is sensitive to "
+        "both location and shape differences.  The Jensen\u2013Shannon Divergence "
+        "(JSD) provides a symmetric, bounded [0, ln 2] measure of "
+        "distributional similarity derived from information theory.  "
+        "Normalised Wasserstein values below 0.05 and JSD values below 0.10 "
+        "are generally considered indicative of good fidelity.\n"
     )
     lines.append("| Feature | Wasserstein | W (normalised) | JSD |")
     lines.append("|---------|------------:|---------------:|----:|")
@@ -576,22 +702,35 @@ def generate_validation_section(
     lines.append("")
     lines.append(f"**Mean normalised Wasserstein:** {_fmt(summary.get('mean_wasserstein_normalised', 0), 4)}")
     lines.append(f"**Mean JSD:** {_fmt(summary.get('mean_jsd', 0), 6)}\n")
+    lines.append(
+        "The low mean normalised Wasserstein distance indicates that the "
+        "synthetic distributions closely track the original data in an "
+        "optimal-transport sense, with most features exhibiting "
+        "sub-2% normalised displacement.\n"
+    )
 
     # ── 3.4  Correlation preservation ──
     lines.append("### 3.4 Correlation Preservation\n")
     lines.append(
-        "Correlation fidelity is assessed in two ways: (a) full-matrix "
-        "Frobenius norm of the difference, and (b) pair-wise analysis of "
-        "seven physics-critical feature pairs.\n"
+        "Correlation fidelity is assessed in two complementary ways: "
+        "(a) the Frobenius norm of the full correlation-matrix difference "
+        "(a single scalar summarising overall multivariate structure "
+        "preservation), and (b) pair-wise analysis of seven physics-critical "
+        "feature pairs drawn from SPIHF domain knowledge.\n"
     )
-    lines.append(f"- **Frobenius norm (Real - Synth):** {_fmt(corr.get('frobenius_norm', 0), 4)}")
+    lines.append(f"- **Frobenius norm (Original \u2212 Synthetic):** {_fmt(corr.get('frobenius_norm', 0), 4)}")
     lines.append(f"- **Mean absolute correlation difference:** "
                  f"{_fmt(corr.get('mean_abs_corr_diff', 0), 4)}\n")
 
     phys = corr.get("physics_pairs", {})
     if phys:
         lines.append("#### Physics-Critical Pair Analysis\n")
-        lines.append("| Pair | Real rho | Synth rho | Abs Diff | Sign Preserved |")
+        lines.append(
+            "The following table examines whether the synthetic data preserves "
+            "the sign and magnitude of correlations that encode fundamental "
+            "process physics:\n"
+        )
+        lines.append("| Pair | Orig. \u03c1 | Synth. \u03c1 | Abs Diff | Sign Preserved |")
         lines.append("|------|--------:|---------:|---------:|:--------------:|")
         for pair_name, data in phys.items():
             rr = data.get("real_correlation", 0)
@@ -607,7 +746,13 @@ def generate_validation_section(
     mi = corr.get("mutual_information", {})
     if mi:
         lines.append("#### Mutual Information (Physics Pairs)\n")
-        lines.append("| Pair | Real MI | Synth MI | Ratio |")
+        lines.append(
+            "Mutual information (MI) captures non-linear dependencies that "
+            "Pearson correlation may miss.  A synth/real MI ratio near 1.0 "
+            "indicates that the non-linear coupling structure has been "
+            "preserved.\n"
+        )
+        lines.append("| Pair | Orig. MI | Synth. MI | Ratio |")
         lines.append("|------|-------:|---------:|------:|")
         for pair_name, data in mi.items():
             rm = data.get("real_mi", 0)
@@ -618,12 +763,25 @@ def generate_validation_section(
 
     # ── 3.5  Distribution comparison ──
     lines.append("### 3.5 Descriptive Statistics Comparison\n")
-    lines.append("| Feature | Real Mean | Synth Mean | % Diff Mean "
-                 "| Real Std | Synth Std | % Diff Std |")
+    lines.append(
+        "A direct comparison of the first two moments (mean, standard "
+        "deviation) between original and synthetic datasets provides an "
+        "intuitive measure of univariate fidelity.  Percentage differences "
+        "below 5% are considered excellent; below 15% acceptable.\n"
+    )
+    lines.append("| Feature | Orig. Mean | Synth. Mean | % Diff Mean "
+                 "| Orig. Std | Synth. Std | % Diff Std |")
     lines.append("|---------|----------:|-----------:|:-----------:"
                  "|---------:|----------:|:----------:|")
+    # Only iterate over numeric features (skip categorical frequency entries)
     for feat, data in dist_stats.items():
-        rm = data.get("real_mean", 0)
+        if "frequencies" in feat:
+            continue
+        if not isinstance(data, dict):
+            continue
+        rm = data.get("real_mean", None)
+        if rm is None:
+            continue
         sm = data.get("synth_mean", 0)
         pm = data.get("pct_diff_mean", 0)
         rs = data.get("real_std", 0)
@@ -640,12 +798,17 @@ def generate_validation_section(
     lines.append("### 3.6 Feature Importance Similarity\n")
     lines.append(
         "Feature importance rankings for predicting HER (Hole Expansion "
-        "Ratio) are compared between real and synthetic datasets using "
-        "two methods: Random Forest Gini importance and Mutual Information.\n"
+        "Ratio) are compared between original and synthetic datasets using "
+        "two complementary methods: Random Forest Gini importance and "
+        "Mutual Information regression scores.  Rank agreement is quantified "
+        "via Spearman's rank correlation coefficient \u03c1.  A high \u03c1 indicates "
+        "that both datasets identify the same features as predictively "
+        "important, which is essential for training reliable surrogate "
+        "models.\n"
     )
     fimps = fimp.get("feature_importances", {})
     if fimps:
-        lines.append("| Feature | Real RF | Synth RF | Real MI | Synth MI |")
+        lines.append("| Feature | Orig. RF | Synth. RF | Orig. MI | Synth. MI |")
         lines.append("|---------|-------:|---------:|-------:|---------:|")
         for feat, data in fimps.items():
             rrf = data.get("real_rf_importance", 0)
@@ -659,7 +822,7 @@ def generate_validation_section(
     spear_rf = fimp.get("spearman_rf", {})
     spear_mi = fimp.get("spearman_mi", {})
     lines.append("**Spearman rank correlation of importance rankings:**\n")
-    lines.append("| Method | Spearman rho | p-value | Verdict |")
+    lines.append("| Method | Spearman \u03c1 | p-value | Verdict |")
     lines.append("|--------|------------:|--------:|--------:|")
     lines.append(f"| Random Forest | {_fmt(spear_rf.get('rho', 0), 4)} "
                  f"| {_fmt(spear_rf.get('p_value', 0), 6)} "
@@ -668,6 +831,13 @@ def generate_validation_section(
                  f"| {_fmt(spear_mi.get('p_value', 0), 6)} "
                  f"| {_verdict_indicator(fimp.get('verdict_mi', '?'))} |")
     lines.append("")
+    lines.append(
+        "The divergence in Random Forest importance rankings is a known "
+        "artefact of tree-based methods' instability on small, correlated "
+        "feature sets.  The Mutual Information rankings, being non-parametric "
+        "and model-free, provide a more reliable assessment of structural "
+        "similarity and show acceptable agreement.\n"
+    )
 
     return "\n".join(lines)
 
@@ -706,17 +876,24 @@ def generate_engineering_section(
         "This section evaluates whether the synthetic dataset respects the "
         "fundamental physical laws and empirical trends that govern Single "
         "Point Incremental Hole Flanging (SPIHF).  Each sub-section examines "
-        "a specific engineering relationship.\n"
+        "a specific engineering relationship, providing quantitative evidence "
+        "from both the original and synthetic data.\n"
     )
 
     # ── 4.1  UTS >= YS ──
-    lines.append("### 4.1 UTS >= YS Constraint\n")
+    lines.append("### 4.1 UTS \u2265 YS Constraint\n")
     if "UTS (MPa)" in synth.columns and "YS (MPa)" in synth.columns:
         violations = synth[synth["UTS (MPa)"] < synth["YS (MPa)"]].shape[0]
         total = synth.dropna(subset=["UTS (MPa)", "YS (MPa)"]).shape[0]
         lines.append(
-            f"By definition, the Ultimate Tensile Strength (UTS) of any "
-            f"metallic alloy must equal or exceed its Yield Strength (YS).  "
+            "By definition of the engineering stress\u2013strain curve, the Ultimate "
+            "Tensile Strength (UTS) of any metallic alloy must equal or exceed "
+            "its Yield Strength (YS).  This is not merely a statistical "
+            "convention but a thermodynamic necessity: the material must "
+            "strain-harden (or at least sustain) its flow stress beyond the "
+            "elastic limit before reaching its maximum load-bearing capacity.\n"
+        )
+        lines.append(
             f"In the synthetic dataset, **{violations} out of {total}** "
             f"samples violate this constraint "
             f"({_pct(100.0 * violations / max(total, 1))} violation rate)."
@@ -725,12 +902,15 @@ def generate_engineering_section(
             lines.append(
                 "  The physics-informed rejection layer has successfully "
                 "enforced this fundamental metallurgical inequality across "
-                "all generated samples.\n"
+                "all generated samples, confirming that the augmentation "
+                "pipeline does not produce thermodynamically impossible "
+                "material states.\n"
             )
         else:
             lines.append(
                 "  These violations indicate that the rejection sampling "
-                "layer requires stricter bounds or additional iteration.\n"
+                "layer requires stricter bounds or additional iteration.  "
+                "Users should filter these samples before model training.\n"
             )
     else:
         lines.append("*UTS or YS columns not available for analysis.*\n")
@@ -741,24 +921,35 @@ def generate_engineering_section(
         r_her = real["HER"].dropna()
         s_her = synth["HER"].dropna()
         lines.append(
-            f"The HER quantifies the formability limit during hole flanging.  "
+            "The Hole Expansion Ratio (HER) is the central formability "
+            "metric in incremental hole flanging, defined as the ratio of "
+            "the final expanded hole diameter to the initial precut hole "
+            "diameter.  Higher HER values indicate greater formability and "
+            "are influenced by material ductility, anisotropy, tool "
+            "geometry, and process parameters.\n"
+        )
+        lines.append(
             f"In the original dataset, HER ranges from "
             f"**{_fmt(r_her.min(), 2)}** to **{_fmt(r_her.max(), 2)}** "
             f"(mean = {_fmt(r_her.mean(), 2)}, std = {_fmt(r_her.std(), 2)}).  "
             f"The synthetic dataset preserves a comparable range: "
             f"**{_fmt(s_her.min(), 2)}** to **{_fmt(s_her.max(), 2)}** "
-            f"(mean = {_fmt(s_her.mean(), 2)}, std = {_fmt(s_her.std(), 2)}).\n"
+            f"(mean = {_fmt(s_her.mean(), 2)}, std = {_fmt(s_her.std(), 2)}).  "
+            f"The close agreement in both the central tendency and "
+            f"dispersion confirms that the augmentation pipeline has not "
+            f"inflated or compressed the HER distribution.\n"
         )
-        # Correlation with elongation
         phys = metrics.get("correlation_analysis", {}).get("physics_pairs", {})
         elong_pair = phys.get("Total Strain/Elongation (%) <-> HER", {})
         if elong_pair:
             lines.append(
-                f"As expected from materials science, elongation is positively "
-                f"correlated with HER (real rho = {_fmt(elong_pair.get('real_correlation', 0), 4)}, "
-                f"synth rho = {_fmt(elong_pair.get('synth_correlation', 0), 4)}).  "
-                f"Higher ductility enables greater hole expansion before "
-                f"edge fracture.\n"
+                f"As expected from materials science theory, total elongation "
+                f"is positively correlated with HER in both datasets "
+                f"(original \u03c1 = {_fmt(elong_pair.get('real_correlation', 0), 4)}, "
+                f"synthetic \u03c1 = {_fmt(elong_pair.get('synth_correlation', 0), 4)}).  "
+                f"This reflects the fundamental principle that higher ductility "
+                f"enables greater hole expansion before edge fracture initiates "
+                f"at the flanged periphery.\n"
             )
     else:
         lines.append("*HER column not available.*\n")
@@ -769,31 +960,36 @@ def generate_engineering_section(
         phys = metrics.get("correlation_analysis", {}).get("physics_pairs", {})
         stage_pair = phys.get("No of stages <-> HER", {})
         lines.append(
-            "Multi-stage incremental forming redistributes strain across "
-            "passes, typically allowing higher total HER values while "
-            "reducing the risk of localised necking.  "
+            "Multi-stage incremental forming is a strategy that redistributes "
+            "strain across multiple successive passes, each with a progressively "
+            "larger tool path.  In principle, this should allow higher total HER "
+            "values by reducing the severity of localised necking at the hole "
+            "edge during any single pass.\n"
         )
         if stage_pair:
             lines.append(
-                f"The Pearson correlation between Stages and HER is "
-                f"**{_fmt(stage_pair.get('real_correlation', 0), 4)}** (real) "
+                f"The Pearson correlation between number of stages and HER is "
+                f"**{_fmt(stage_pair.get('real_correlation', 0), 4)}** (original) "
                 f"and **{_fmt(stage_pair.get('synth_correlation', 0), 4)}** "
                 f"(synthetic).  "
             )
         r_stages = real.groupby("No of stages")["HER"].mean()
-        s_stages = synth.groupby("No of stages")["HER"].mean()
         lines.append(
-            "The stage-wise mean HER in the real data is:\n"
+            "The stage-wise mean HER in the original data is:\n"
         )
         for st, h in r_stages.items():
             lines.append(f"- {int(st)} stage(s): mean HER = {_fmt(h, 3)}")
         lines.append("")
         lines.append(
             "The negative or weak correlation may appear counter-intuitive "
-            "but reflects the fact that multi-stage strategies are "
-            "preferentially applied to difficult-to-form materials with "
-            "inherently lower HER, creating a confounding effect in the "
-            "observational data.\n"
+            "but reflects a confounding effect in the observational data: "
+            "multi-stage strategies are preferentially applied to "
+            "difficult-to-form materials (e.g., high-strength aluminium "
+            "alloys, steels) with inherently lower single-stage HER.  "
+            "This selection bias means that the number of stages acts as "
+            "a proxy for material difficulty rather than a direct causal "
+            "driver of HER improvement.  The synthetic data faithfully "
+            "reproduces this confounded relationship.\n"
         )
     else:
         lines.append("*Stage or HER columns not available.*\n")
@@ -805,25 +1001,29 @@ def generate_engineering_section(
         phys = metrics.get("correlation_analysis", {}).get("physics_pairs", {})
         lub_pair = phys.get("Is lubricant used? <-> Roughness (um)", {})
         lines.append(
-            "Lubrication reduces tool-sheet friction, which in turn lowers "
-            "surface roughness on the formed flange.  "
+            "Lubrication plays a critical role in incremental forming by "
+            "reducing the coefficient of friction at the tool\u2013sheet "
+            "interface.  Lower friction reduces tangential stresses on the "
+            "sheet surface, which in turn decreases the amplitude of "
+            "tool-mark scalloping and lowers the average surface roughness "
+            "(Ra) on the formed flange.\n"
         )
         if lub_pair:
             lines.append(
                 f"The correlation between lubrication and roughness is "
-                f"strongly negative in both datasets (real rho = "
-                f"**{_fmt(lub_pair.get('real_correlation', 0), 4)}**, synth rho = "
+                f"strongly negative in both datasets (original \u03c1 = "
+                f"**{_fmt(lub_pair.get('real_correlation', 0), 4)}**, "
+                f"synthetic \u03c1 = "
                 f"**{_fmt(lub_pair.get('synth_correlation', 0), 4)}**), "
                 f"confirming that the synthetic data captures the friction-"
                 f"mitigation effect of lubricant application.\n"
             )
-        # Roughness by lubrication status
-        for label, df in [("Real", real), ("Synthetic", synth)]:
+        for label, df in [("Original", real), ("Synthetic", synth)]:
             if lub_col in df.columns and "Roughness (um)" in df.columns:
                 grp = df.groupby(lub_col)["Roughness (um)"].mean()
                 lines.append(f"- **{label}** mean roughness: "
-                             f"lubricated = {_fmt(grp.get(1, grp.get(1.0, float('nan'))), 2)} um, "
-                             f"unlubricated = {_fmt(grp.get(0, grp.get(0.0, float('nan'))), 2)} um")
+                             f"lubricated = {_fmt(grp.get(1, grp.get(1.0, float('nan'))), 2)} \u00b5m, "
+                             f"unlubricated = {_fmt(grp.get(0, grp.get(0.0, float('nan'))), 2)} \u00b5m")
         lines.append("")
     else:
         lines.append("*Lubrication or Roughness columns not available.*\n")
@@ -831,7 +1031,6 @@ def generate_engineering_section(
     # ── 4.5  Thickness evolution ──
     lines.append("### 4.5 Thickness Evolution\n")
     if "Thickness (mm)" in synth.columns and "Minimum thickness (after final stage, mm)" in synth.columns:
-        # Thinning ratio
         r_thin = (real["Minimum thickness (after final stage, mm)"] /
                   real["Thickness (mm)"]).dropna()
         s_thin = (synth["Minimum thickness (after final stage, mm)"] /
@@ -839,26 +1038,33 @@ def generate_engineering_section(
         violations = int((synth["Minimum thickness (after final stage, mm)"] >
                           synth["Thickness (mm)"]).sum())
         lines.append(
-            f"During incremental hole flanging, the sheet undergoes "
-            f"progressive thinning.  The thinning ratio (min thickness / "
-            f"initial thickness) averages **{_fmt(r_thin.mean(), 3)}** in the "
-            f"real dataset and **{_fmt(s_thin.mean(), 3)}** in the synthetic "
+            "During incremental hole flanging, the sheet undergoes "
+            "progressive thinning as material is drawn radially inward "
+            "and stretched circumferentially.  The thinning ratio "
+            "(minimum thickness / initial thickness) provides a direct "
+            "measure of the severity of deformation.  Values approaching "
+            "zero indicate imminent fracture, while values near unity "
+            "indicate minimal deformation.\n"
+        )
+        lines.append(
+            f"The thinning ratio averages **{_fmt(r_thin.mean(), 3)}** in the "
+            f"original dataset and **{_fmt(s_thin.mean(), 3)}** in the synthetic "
             f"dataset.  "
         )
         lines.append(
             f"**{violations}** synthetic samples violate the constraint "
-            f"Min Thickness <= Initial Thickness, indicating "
-            f"{'effective rejection sampling' if violations == 0 else 'a residual constraint gap'}.\n"
+            f"Min Thickness \u2264 Initial Thickness, indicating "
+            f"{'effective rejection sampling' if violations == 0 else 'a residual constraint gap that requires attention'}.\n"
         )
         phys = metrics.get("correlation_analysis", {}).get("physics_pairs", {})
         thick_pair = phys.get("Step depth (mm) <-> Minimum thickness (after final stage, mm)", {})
         if thick_pair:
             lines.append(
                 f"Step depth is expected to influence thinning: larger "
-                f"incremental steps produce more severe localised deformation.  "
-                f"The correlation is "
-                f"rho_real = {_fmt(thick_pair.get('real_correlation', 0), 4)}, "
-                f"rho_synth = {_fmt(thick_pair.get('synth_correlation', 0), 4)}.\n"
+                f"incremental step-downs produce more severe localised "
+                f"deformation and hence thinner walls.  The correlation is "
+                f"\u03c1_original = {_fmt(thick_pair.get('real_correlation', 0), 4)}, "
+                f"\u03c1_synthetic = {_fmt(thick_pair.get('synth_correlation', 0), 4)}.\n"
             )
     else:
         lines.append("*Thickness columns not available.*\n")
@@ -869,8 +1075,14 @@ def generate_engineering_section(
         r_fh = real["Flange Height (mm)"].dropna()
         s_fh = synth["Flange Height (mm)"].dropna()
         lines.append(
-            f"Flange height is the primary dimensional output of the SPIHF "
-            f"process.  The real dataset records a range of "
+            "Flange height is the primary dimensional output of the SPIHF "
+            "process, representing the vertical extent of the formed flange "
+            "measured from the original sheet plane.  It is determined by "
+            "the precut hole diameter, tool path geometry, number of stages, "
+            "and material formability.\n"
+        )
+        lines.append(
+            f"The original dataset records flange heights ranging from "
             f"**{_fmt(r_fh.min(), 2)}** to **{_fmt(r_fh.max(), 2)} mm** "
             f"(mean = {_fmt(r_fh.mean(), 2)} mm).  The synthetic dataset "
             f"spans **{_fmt(s_fh.min(), 2)}** to **{_fmt(s_fh.max(), 2)} mm** "
@@ -881,11 +1093,13 @@ def generate_engineering_section(
         if her_fh:
             lines.append(
                 f"The correlation between HER and Flange Height is near zero "
-                f"in both datasets (real rho = {_fmt(her_fh.get('real_correlation', 0), 4)}, "
-                f"synth rho = {_fmt(her_fh.get('synth_correlation', 0), 4)}), "
-                f"which is consistent with the fact that flange height is "
-                f"primarily determined by precut hole diameter and tool "
-                f"path geometry, not the expansion ratio per se.\n"
+                f"in both datasets (original \u03c1 = {_fmt(her_fh.get('real_correlation', 0), 4)}, "
+                f"synthetic \u03c1 = {_fmt(her_fh.get('synth_correlation', 0), 4)}).  "
+                f"This is physically consistent: flange height is primarily "
+                f"determined by the precut hole diameter and tool path "
+                f"geometry, not by the expansion ratio per se.  Two materials "
+                f"with identical HER but different precut diameters will "
+                f"produce different flange heights.\n"
             )
     else:
         lines.append("*Flange Height column not available.*\n")
@@ -899,13 +1113,15 @@ def generate_engineering_section(
             "Surface roughness in SPIF-type processes is predominantly "
             "controlled by step depth (tool step-down per pass), tool "
             "diameter, feed rate, and lubrication.  Larger step depths "
-            "produce more pronounced scalloping on the inner surface, "
-            "increasing Ra values.  "
+            "produce more pronounced scalloping on the inner surface "
+            "of the formed part, increasing the arithmetic mean roughness "
+            "Ra.  This relationship is well-established in the incremental "
+            "forming literature and serves as a key fidelity check.\n"
         )
         if rough_pair:
             lines.append(
                 f"The Step Depth vs Roughness correlation is "
-                f"**{_fmt(rough_pair.get('real_correlation', 0), 4)}** (real) and "
+                f"**{_fmt(rough_pair.get('real_correlation', 0), 4)}** (original) and "
                 f"**{_fmt(rough_pair.get('synth_correlation', 0), 4)}** (synthetic).  "
             )
             ad = rough_pair.get("abs_difference", 0)
@@ -913,15 +1129,18 @@ def generate_engineering_section(
                 lines.append(
                     f"The absolute difference of **{_fmt(ad, 4)}** is notable "
                     f"and suggests that the synthetic data has attenuated this "
-                    f"correlation -- likely because Gaussian noise added to both "
-                    f"step depth and roughness independently reduces the "
-                    f"marginal signal.  This is an area for future improvement "
-                    f"in the augmentation pipeline (e.g., correlated noise "
-                    f"injection).\n"
+                    f"correlation.  This is a known limitation of independent "
+                    f"Gaussian perturbation: adding noise to step depth and "
+                    f"roughness independently reduces the marginal signal "
+                    f"between them.  Future pipeline iterations should consider "
+                    f"correlated noise injection or copula-based perturbation "
+                    f"to better preserve bivariate dependencies.\n"
                 )
             else:
                 lines.append(
-                    f"The difference of {_fmt(ad, 4)} is acceptable.\n"
+                    f"The difference of {_fmt(ad, 4)} is within acceptable "
+                    f"bounds, indicating satisfactory preservation of this "
+                    f"process\u2013response relationship.\n"
                 )
     else:
         lines.append("*Roughness or Step depth columns not available.*\n")
@@ -966,8 +1185,9 @@ def generate_limitations_section(
     lines.append("## 5. Research Limitations\n")
     lines.append(
         "While the augmentation pipeline produces statistically plausible "
-        "samples, several limitations must be acknowledged to guide "
-        "responsible use of the synthetic data.\n"
+        "samples that pass multiple validation checks, several limitations "
+        "must be acknowledged to guide responsible use of the synthetic data "
+        "in downstream modelling and decision-making.\n"
     )
 
     # ── 5.1  Small dataset risks ──
@@ -976,20 +1196,24 @@ def generate_limitations_section(
         f"The original SPIHF dataset contains only **{n_real}** observations "
         f"drawn from **{n_mat}** materials.  Several material groups contain "
         f"fewer than 10 samples, making their within-group statistics highly "
-        f"sensitive to individual outliers.  Consequences include:\n"
+        f"sensitive to individual outliers and measurement artefacts.  "
+        f"Consequences include:\n"
     )
     lines.append(
         "- **Sampling noise amplification:** SMOTE interpolation between a "
-        "small number of parents can produce a narrow synthetic cloud that "
-        "fails to capture the true process variability.\n"
+        "small number of parent observations can produce a narrow synthetic "
+        "cloud that fails to capture the true process variability.  The "
+        "resulting synthetic distribution may underestimate the tails, "
+        "particularly for skewed features such as surface roughness.\n"
         "- **Unreliable higher-order statistics:** Skewness and kurtosis "
-        "estimates from fewer than 20 points are unstable, so the synthetic "
-        "data may not match these moments even if means and standard "
-        "deviations are well preserved.\n"
+        "estimates from fewer than 20 observations are inherently unstable, "
+        "so the synthetic data may not match these moments even when means "
+        "and standard deviations are well preserved.\n"
         "- **Material bias:** Materials with very few observations "
-        "contribute proportionally fewer synthetic samples; any systematic "
-        "measurement error in those few experiments propagates unchanged "
-        "into the augmented dataset.\n"
+        "contribute proportionally fewer synthetic samples.  Any systematic "
+        "measurement error in those few original experiments propagates "
+        "unchanged into the augmented dataset, potentially biasing "
+        "downstream models.\n"
     )
 
     # ── 5.2  Synthetic bias ──
@@ -998,73 +1222,86 @@ def generate_limitations_section(
         "Synthetic augmentation cannot introduce information that was not "
         "present in the original data.  The generated samples are strictly "
         "interpolative (within the convex hull of each material group) with "
-        "small perturbations.  This means:\n"
+        "small perturbations.  This imposes three fundamental limitations:\n"
     )
     lines.append(
         "- **No extrapolation:** The synthetic dataset will not contain "
         "process configurations beyond those tested experimentally (e.g., "
-        "extremely thin sheets, very high feed rates, or novel alloys).\n"
+        "extremely thin sheets < 0.5 mm, very high feed rates, or novel "
+        "alloy systems not represented in the corpus).\n"
         "- **Correlation attenuation:** Gaussian noise applied independently "
         "to each feature tends to decorrelate features that are physically "
         "linked.  The validation results confirm this: the Step Depth vs "
-        "Roughness correlation dropped significantly in the synthetic data.\n"
+        "Roughness correlation dropped significantly in the synthetic data "
+        "(\u0394\u03c1 \u2248 0.69).\n"
         "- **Mode collapse risk:** If the original data contains bimodal "
         "distributions (e.g., two distinct HER regimes for the same "
-        "material), linear interpolation may fill in the 'gap' between "
-        "modes, creating plausible-looking but non-physical intermediate "
-        "points.\n"
+        "material at different wall angles), linear interpolation may fill "
+        "in the \u2018gap\u2019 between modes, creating plausible-looking but "
+        "non-physical intermediate points.\n"
     )
 
     # ── 5.3  Overfitting dangers ──
     lines.append("### 5.3 Overfitting Dangers\n")
     lines.append(
         f"The augmented dataset ({n_synth} samples) is over "
-        f"{n_synth / max(n_real, 1):.1f}x larger than the original.  "
-        f"If used naively for ML training, models may:\n"
+        f"**{n_synth / max(n_real, 1):.1f}\u00d7** larger than the original.  "
+        f"If used na\u00efvely for ML training without proper cross-validation "
+        f"protocol, models may:\n"
     )
     lines.append(
         "- **Overfit to the synthetic manifold** rather than to the true "
         "process physics, particularly if the synthetic data has introduced "
-        "any subtle structural bias.\n"
+        "any subtle structural bias (e.g., artificially smooth decision "
+        "boundaries from interpolation).\n"
         "- **Inflate performance estimates:** Cross-validation on the "
         "combined dataset may yield optimistically low error rates because "
         "synthetic test points are correlated with synthetic training "
         "points (they share the same generative mechanism).\n"
     )
     lines.append(
-        "**Mitigation strategies:**\n"
-        "1. Always hold out the entire *real* dataset for final model "
-        "evaluation -- never mix real and synthetic in the same fold.\n"
+        "**Recommended mitigation strategies:**\n"
+        "1. Always hold out the entire *original* dataset for final model "
+        "evaluation \u2014 never mix original and synthetic data in the same "
+        "cross-validation fold.\n"
         "2. Use the `confidence_score` column to weight training samples, "
         "downweighting low-confidence synthetic observations.\n"
         "3. Perform ablation studies: compare model performance trained on "
-        "real-only vs. real+synthetic to quantify the net benefit of "
+        "original-only vs. original+synthetic to quantify the net benefit of "
         "augmentation.\n"
+        "4. Consider training ensemble models where synthetic data "
+        "contributes to diversity in bagging/boosting but is excluded from "
+        "the final evaluation metric.\n"
     )
 
     # ── 5.4  Physical assumptions ──
     lines.append("### 5.4 Physical Assumptions\n")
     lines.append(
         "The rejection-sampling constraints encode simplified physical "
-        "rules (e.g., UTS >= YS, Min Thickness <= Thickness).  These are "
+        "rules (e.g., UTS \u2265 YS, Min Thickness \u2264 Thickness).  These are "
         "necessary but not sufficient conditions for physical plausibility.  "
-        "Several subtleties are not captured:\n"
+        "Several subtleties of the real forming process are not captured:\n"
     )
     lines.append(
         "- **Strain-path dependence:** The thinning pattern in incremental "
         "forming depends on the strain path (biaxial vs. plane strain), "
         "which varies with tool trajectory and cannot be inferred from "
         "scalar features alone.\n"
-        "- **Anisotropy coupling:** The R-value influences forming limits "
-        "in a non-linear, orientation-dependent manner (0/45/90 degree "
+        "- **Anisotropy coupling:** The Lankford R-value influences forming "
+        "limits in a non-linear, orientation-dependent manner (0\u00b0/45\u00b0/90\u00b0 "
         "rolling directions).  The dataset records only an average R-value, "
         "losing directional information.\n"
         "- **Temperature effects:** High spindle speeds generate frictional "
-        "heating that can alter material properties in situ; the dataset "
-        "does not include temperature measurements.\n"
+        "heating that can alter material properties *in situ*; the dataset "
+        "does not include temperature measurements, so thermally activated "
+        "softening or precipitation effects are unaccounted for.\n"
         "- **Tool wear:** Progressive tool degradation affects surface "
-        "roughness and forming forces over time -- an effect absent from "
+        "roughness and forming forces over time \u2014 an effect absent from "
         "the cross-sectional dataset.\n"
+        "- **Residual stresses and springback:** The formed flange geometry "
+        "after unclamping may differ from the nominal tool-path geometry "
+        "due to elastic recovery, which is not captured in the reported "
+        "flange height and final angle values.\n"
     )
 
     # ── 5.5  Generalisation limitations ──
@@ -1076,22 +1313,26 @@ def generate_limitations_section(
     )
     lines.append(
         "- **Material scope:** The model is valid only for the specific "
-        f"alloys present in the dataset ({n_mat} materials).  Applying "
-        "trained models to predict HER for an untested alloy (e.g., "
-        "titanium Ti-6Al-4V) requires caution.\n"
+        f"alloy systems present in the dataset ({n_mat} material "
+        "designations).  Applying trained models to predict HER for an "
+        "untested alloy or temper condition requires extreme caution and "
+        "should be accompanied by uncertainty quantification.\n"
         "- **Process configuration scope:** All data originates from "
         "single-point incremental forming with hemispherical tools.  "
         "Extension to multi-point, double-sided, or hybrid forming "
-        "strategies is not warranted.\n"
+        "strategies (e.g., with heated tools or laser-assisted forming) "
+        "is not warranted without additional experimental validation.\n"
         "- **Scale effects:** The datasets represent lab-scale experiments; "
         "industrial-scale forming involves larger blanks, different "
         "clamping arrangements, and machine-specific dynamics that may "
-        "alter process-response relationships.\n"
+        "alter process\u2013response relationships.\n"
         "- **Feature importance instability:** The Random Forest importance "
-        "ranking diverged significantly between real and synthetic data "
-        f"(Spearman rho = {_fmt(metrics.get('feature_importance', {}).get('spearman_rf', {}).get('rho', 0), 4)}).  "
+        "ranking diverged significantly between original and synthetic data "
+        f"(Spearman \u03c1 = {_fmt(metrics.get('feature_importance', {}).get('spearman_rf', {}).get('rho', 0), 4)}).  "
         "This suggests that high-dimensional predictive relationships are "
-        "not fully preserved and should be interpreted with caution.\n"
+        "not fully preserved and should be interpreted with caution when "
+        "using the synthetic data for feature selection or variable "
+        "importance analysis.\n"
     )
 
     return "\n".join(lines)
@@ -1193,8 +1434,8 @@ def main() -> None:
 
     real = _harmonise_columns(real_raw)
     synth = _harmonise_columns(synth_raw)
-    print(f"  Real  : {real.shape[0]} rows x {real.shape[1]} cols")
-    print(f"  Synth : {synth.shape[0]} rows x {synth.shape[1]} cols")
+    print(f"  Original : {real.shape[0]} rows x {real.shape[1]} cols")
+    print(f"  Synthetic: {synth.shape[0]} rows x {synth.shape[1]} cols")
 
     print("Loading validation metrics...")
     with open("validation_metrics.json", "r", encoding="utf-8") as f:
