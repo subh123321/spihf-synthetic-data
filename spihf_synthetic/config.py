@@ -23,10 +23,10 @@ RANDOM_SEED: int = 42
 #  AUGMENTATION HYPER-PARAMETERS
 # ═══════════════════════════════════════════════════════════════════════
 
-NOISE_LEVEL: Tuple[float, float] = (0.01, 0.03)
+NOISE_LEVEL: Tuple[float, float] = (0.005,0.015)
 """(low, high) fraction of within-group std used for Gaussian noise."""
 
-CONFIDENCE_THRESHOLD: float = 0.25
+CONFIDENCE_THRESHOLD: float = 0.40
 """Minimum confidence score for rejection sampling."""
 
 NUM_SYNTHETIC_SAMPLES: int = 1000
@@ -35,13 +35,13 @@ NUM_SYNTHETIC_SAMPLES: int = 1000
 MIN_SAMPLES_FOR_INTERPOLATION: int = 2
 """Minimum real samples in a material group to enable SMOTE interpolation."""
 
-MAX_ATTEMPTS_MULTIPLIER: int = 5
+MAX_ATTEMPTS_MULTIPLIER: int = 10
 """Maximum generation attempts = required × this multiplier."""
 
 DUPLICATE_THRESHOLD: float = 0.005
 """Normalised L2 distance below which two synthetic samples are duplicates."""
 
-ALPHA_RANGE: Tuple[float, float] = (0.2, 0.8)
+ALPHA_RANGE: Tuple[float, float] = (0.3,0.7)
 """SMOTE interpolation coefficient α bounds."""
 
 # ═══════════════════════════════════════════════════════════════════════

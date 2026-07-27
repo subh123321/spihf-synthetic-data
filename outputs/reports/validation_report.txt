@@ -1,0 +1,47 @@
+========================================================================
+  SPIHF SYNTHETIC DATA VALIDATION REPORT
+========================================================================
+  Generated : 2026-07-26T12:33:43.937396
+  Real samples     : 304
+  Synthetic samples: 1001
+  Overall Grade    : C  (score = 60.85%)
+========================================================================
+
+========================================================================
+  COMPOSITE SCORE BREAKDOWN
+========================================================================
+  KS pass rate          (25%) : 44.44%
+  Wasserstein score     (25%) : 98.06%
+  Correlation score     (20%) : 54.5%
+  Importance score      (15%) : 1.96%
+  Stats fidelity        (15%) : 93.53%
+
+========================================================================
+  KOLMOGOROV-SMIRNOV TESTS (alpha = 0.05)
+========================================================================
+  Feature                                              KS Stat     p-value  Result
+  --------------------------------------------------  --------  ----------  ------
+  Thickness (mm)                                        0.1889    0.000000    FAIL
+  Precut dimensions (diameter/side length) mm           0.0923    0.034870    FAIL
+  Total Strain/Elongation (%)                           0.0735    0.152316    PASS
+  UTS (MPa)                                             0.1026    0.013519    FAIL
+  YS (MPa)                                              0.0673    0.228512    PASS
+  Strength Coefficient (k in MPa)                       0.0955    0.026395    FAIL
+  Strain hardening coefficient (n)                      0.0795    0.098156    PASS
+  Anisotropic (R Value)                                 0.0873    0.058256    PASS
+  Is lubricant used?                                    0.0070    1.000000    PASS
+  Feed rate (mm/min)                                    0.1978    0.000000    FAIL
+  Tool speed (rpm)                                      0.2119    0.000000    FAIL
+  Step depth (mm)                                       0.1921    0.000000    FAIL
+  No of stages                                          0.1047    0.012452    FAIL
+  HER                                                   0.0638    0.411583    PASS
+  Flange Height (mm)                                    0.0709    0.457796    PASS
+  Roughness (um)                                        0.0686    0.914972    PASS
+  Minimum thickness (after final stage, mm)             0.3090    0.000000    FAIL
+  Final angle after the final stage (degrees)           0.2813    0.000000    FAIL
+
+  Summary: 8/18 features passed KS test.
+
+========================================================================
+  END OF VALIDATION REPORT
+========================================================================
